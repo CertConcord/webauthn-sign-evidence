@@ -9,7 +9,7 @@ const hex = value => {
 };
 
 // This deliberately recognizes one synthetic Ed25519 COSE_Key shape, not general CBOR.
-export function inspectSyntheticOperation(record, verifierFacts = {}) {
+export function inspectSyntheticOperation(record, requiredPolicy, verifierFacts = {}) {
   const generation = record.keyGeneration;
   const operation = record.signingOperation;
   if (generation.signingAlgorithm !== 'Ed25519')
@@ -24,7 +24,10 @@ export function inspectSyntheticOperation(record, verifierFacts = {}) {
   });
   const signatureMathValid = verify(null, hex(operation.tbsHex), key,
     hex(operation.signatureHex));
-  const policy = generation.requestedPolicy;
+  // The recorded request is evidence, not the verifier's policy authority.
+  if (requiredPolicy === null || typeof requiredPolicy !== 'object' ||
+      Array.isArray(requiredPolicy))
+    throw new TypeError('Verifier policy is required');
   const unmetEvidence = [];
   for (const [required, fact] of [
     ['requireAttestation', 'attestationVerified'],
@@ -32,7 +35,11 @@ export function inspectSyntheticOperation(record, verifierFacts = {}) {
     ['requireUserVerification', 'userVerificationVerified'],
     ['requireAssociatedWebAuthnResult', 'associatedWebAuthnResultVerified'],
   ]) {
-    if (policy[required] && verifierFacts[fact] !== true) unmetEvidence.push(fact);
+    if (!Object.hasOwn(requiredPolicy, required) ||
+        typeof requiredPolicy[required] !== 'boolean')
+      throw new TypeError(`Verifier policy requires boolean ${required}`);
+    if (requiredPolicy[required] && verifierFacts[fact] !== true)
+      unmetEvidence.push(fact);
   }
   return {signatureMathValid, policySatisfied: unmetEvidence.length === 0,
     unmetEvidence};
