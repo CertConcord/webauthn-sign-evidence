@@ -1,0 +1,11 @@
+{
+  "purpose": "Synthetic direct-input signature semantics only; no WebAuthn authenticator or attestation",
+  "algorithm": "Ed25519",
+  "tbsHex": "00ff506173735369676e2073796e746865746963207462732076310a00",
+  "tbsSha256": "819a6eddb12334965c7ce000f23c1ec62fee9b0a64c77181e5b0a887de51576e",
+  "signatureHex": "43a4b4fe2b345260741feafd252213508815eaeebff6b8137bcbf328c203f02521c311cdb21123d27fc678ec264e9cb9e2f1bdcef43b6d5be8fc49ef7ea5a60d",
+  "publicKeySpkiDerHex": "302a300506032b6570032100ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c",
+  "wrongPublicKeySpkiDerHex": "302a300506032b65700321001398f62c6d1a457c51ba6a4b5f3dbd2f69fca93216218dc8997e416bd17d93ca",
+  "changedTbsHex": "00ff506073735369676e2073796e746865746963207462732076310a00",
+  "prehashedTbsHex": "819a6eddb12334965c7ce000f23c1ec62fee9b0a64c77181e5b0a887de51576e"
+}

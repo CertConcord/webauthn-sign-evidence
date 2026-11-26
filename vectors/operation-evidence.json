@@ -1,0 +1,33 @@
+{
+  "scope": "Synthetic field-preservation example; no browser or authenticator output",
+  "selectedDraft": "w3cSignBranch",
+  "keyGeneration": {
+    "credentialIdHex": "01020304",
+    "keyHandleHex": "a1b2c3d4",
+    "signingAlgorithm": "Ed25519",
+    "cosePublicKeyHex": "a4010103272006215820ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c",
+    "attestation": {
+      "status": "unavailable",
+      "objectHex": null
+    },
+    "requestedPolicy": {
+      "requireAttestation": true,
+      "requireUserPresence": true,
+      "requireUserVerification": true,
+      "requireAssociatedWebAuthnResult": true
+    }
+  },
+  "signingOperation": {
+    "tbsHex": "00ff506173735369676e2073796e746865746963207462732076310a00",
+    "signatureHex": "43a4b4fe2b345260741feafd252213508815eaeebff6b8137bcbf328c203f02521c311cdb21123d27fc678ec264e9cb9e2f1bdcef43b6d5be8fc49ef7ea5a60d",
+    "associatedWebAuthnResult": {
+      "status": "unavailable",
+      "responseHex": null
+    },
+    "clientClaims": {
+      "userPresence": true,
+      "userVerification": true,
+      "attested": true
+    }
+  }
+}
