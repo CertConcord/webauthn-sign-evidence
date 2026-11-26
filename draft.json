@@ -1,0 +1,9 @@
+{
+  "name": "WebAuthn sign extension evidence research",
+  "edition": "draft-01",
+  "status": "experimental",
+  "kind": "application-evidence-research",
+  "stable": false,
+  "w3cExtensionAdopted": false,
+  "authenticatorImplementationDemonstrated": false
+}
