@@ -39,8 +39,8 @@ function decodeMap(sourceBytes, members) {
     if (length > source.length - offset)
       throw new TypeError('Truncated CBOR byte-string content');
     fields.push({
-      content: Buffer.from(source.subarray(offset, offset + length)),
-      encoded: Buffer.from(source.subarray(start, offset + length)),
+      content: ownedBytes(source.subarray(offset, offset + length), 'CBOR content'),
+      encoded: ownedBytes(source.subarray(start, offset + length), 'CBOR field'),
     });
     offset += length;
   }
@@ -54,9 +54,9 @@ function decodeMap(sourceBytes, members) {
 export function decodeSyntheticSignRequest(sourceBytes) {
   const [keyHandle, tbs] = decodeMap(sourceBytes, [2, 6]);
   return Object.freeze({
-    keyHandleBytes: () => Buffer.from(keyHandle.content),
-    toBeSignedBytes: () => Buffer.from(tbs.content),
-    encodedTbsFieldBytes: () => Buffer.from(tbs.encoded),
+    keyHandleBytes: () => ownedBytes(keyHandle.content, 'key handle'),
+    toBeSignedBytes: () => ownedBytes(tbs.content, 'to-be-signed content'),
+    encodedTbsFieldBytes: () => ownedBytes(tbs.encoded, 'encoded tbs field'),
   });
 }
 
@@ -64,5 +64,7 @@ export function decodeSyntheticSignRequest(sourceBytes) {
 // optional support member, attestation object, or surrounding authData.
 export function decodeSyntheticSignResponse(sourceBytes) {
   const [signature] = decodeMap(sourceBytes, [6]);
-  return Object.freeze({signatureBytes: () => Buffer.from(signature.content)});
+  return Object.freeze({
+    signatureBytes: () => ownedBytes(signature.content, 'signature content'),
+  });
 }

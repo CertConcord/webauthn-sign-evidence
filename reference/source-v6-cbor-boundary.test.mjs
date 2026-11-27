@@ -95,6 +95,38 @@ test('narrow CBOR boundary rejects alternate framing and returned-byte mutation'
   assert.equal(decoded.toBeSignedBytes().toString('ascii'), jws.signingInputAscii);
 });
 
+test('private decoded fields and every returned byte view have separate backing stores', () => {
+  const requestInput = hex(vector.syntheticJwsBridge.requestMapHex);
+  const responseInput = hex(vector.syntheticJwsBridge.responseMapHex);
+  const request = decodeSyntheticSignRequest(requestInput);
+  const response = decodeSyntheticSignResponse(responseInput);
+  const accessors = [
+    [() => request.keyHandleBytes(), requestInput],
+    [() => request.toBeSignedBytes(), requestInput],
+    [() => request.encodedTbsFieldBytes(), requestInput],
+    [() => response.signatureBytes(), responseInput],
+  ];
+  const returned = [];
+  for (const [read, source] of accessors) {
+    const first = read();
+    const second = read();
+    assert.notStrictEqual(first.buffer, second.buffer);
+    assert.notStrictEqual(first.buffer, source.buffer);
+    assert.notStrictEqual(second.buffer, source.buffer);
+    assert.equal(first.buffer.byteLength, first.byteLength);
+    assert.equal(second.buffer.byteLength, second.byteLength);
+    returned.push(first, second);
+  }
+  assert.equal(new Set(returned.map(value => value.buffer)).size, returned.length);
+  requestInput[requestInput.length - 1] ^= 1;
+  responseInput[responseInput.length - 1] ^= 1;
+  for (const value of returned) value[0] ^= 1;
+  assert.equal(request.toBeSignedBytes().toString('ascii'), jws.signingInputAscii);
+  assert.equal(request.keyHandleBytes().toString('hex'),
+    vector.syntheticJwsBridge.keyHandleHex);
+  assert.equal(response.signatureBytes().toString('hex'), jws.signatureHex);
+});
+
 test('canonical two-byte bstr length preserves 256 content octets', () => {
   const content = Buffer.alloc(256, 0xa5);
   const encoded = Buffer.concat([hex('a2024006590100'), content]);
