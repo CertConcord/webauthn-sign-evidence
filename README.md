@@ -30,6 +30,8 @@ A [synthetic v6 CBOR boundary vector](vectors/source-v6-cbor-boundary.json) conn
 
 A [sign plus optional support CBOR vector](vectors/source-v6-sign-support-cbor.json) keeps those exact signing bytes while adding `support: true` to the request and a decoded support list to one response. A response that omits support leaves capability unknown. A second response connects a sparse CBOR list to the source model's parent/child index rules. Both parent and child COSE algorithm identifiers are limited to Web IDL `long` (signed 32-bit); eight byte cases check each endpoint and its adjacent excluded value on each axis. The decoder accepts only fixed-order inner maps and bounded canonical CBOR; these examples do not establish an authenticator capability or a Framework algorithm selection.
 
+An [optional `args` outer-framing vector](vectors/source-v6-args-framing.json) extracts the exact content and encoded byte-string field of inner request key 7, with or without key 8 (`support:true`), while retaining the existing no-`args` controls. It uses a separate extractor: the signing request decoder still rejects unvalidated `args`. Both pinned WebAuthn proposals cite a [COSE individual draft `-01`](https://www.ietf.org/archive/id/draft-lundberg-cose-two-party-signing-algs-01.txt) that lacks their named `COSE_Sign_Args`; a [later WG `-01`](https://www.ietf.org/archive/id/draft-ietf-cose-split-signing-algs-01.txt) defines that structure but is not selected here. Extracted contents remain opaque, so this vector does not validate COSE members, error codes 5–8, a signing algorithm, key-handle integrity or a signature made with `args`.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check

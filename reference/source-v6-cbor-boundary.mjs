@@ -10,6 +10,34 @@ function ownedBytes(value, name) {
 // A deliberately narrow view of the draft's inner authenticator extension map.
 // It accepts the fixed sign member order, with optional support as the last
 // member. It does not parse a WebAuthn response or authenticate a key.
+function readByteString(source, start) {
+  let offset = start;
+  const initial = source[offset++];
+  let length;
+  if (initial >= 0x40 && initial <= 0x57) {
+    length = initial - 0x40;
+  } else if (initial === 0x58) {
+    if (offset >= source.length) throw new TypeError('Truncated CBOR byte-string length');
+    length = source[offset++];
+    if (length < 24) throw new TypeError('Noncanonical CBOR byte-string length');
+  } else if (initial === 0x59) {
+    if (source.length - offset < 2)
+      throw new TypeError('Truncated CBOR byte-string length');
+    length = source.readUInt16BE(offset);
+    offset += 2;
+    if (length <= 255) throw new TypeError('Noncanonical CBOR byte-string length');
+  } else {
+    throw new TypeError('Expected a definite CBOR byte string');
+  }
+  if (length > source.length - offset)
+    throw new TypeError('Truncated CBOR byte-string content');
+  return {
+    content: ownedBytes(source.subarray(offset, offset + length), 'CBOR content'),
+    encoded: ownedBytes(source.subarray(start, offset + length), 'CBOR field'),
+    next: offset + length,
+  };
+}
+
 function decodeMap(sourceBytes, members) {
   const source = ownedBytes(sourceBytes, 'synthetic extension map');
   const hasSupport = source[0] === 0xa0 + members.length + 1;
@@ -20,31 +48,9 @@ function decodeMap(sourceBytes, members) {
   for (const expectedKey of members) {
     if (source[offset++] !== expectedKey)
       throw new TypeError('Unexpected synthetic extension map key');
-    const start = offset;
-    const initial = source[offset++];
-    let length;
-    if (initial >= 0x40 && initial <= 0x57) {
-      length = initial - 0x40;
-    } else if (initial === 0x58) {
-      if (offset >= source.length) throw new TypeError('Truncated CBOR byte-string length');
-      length = source[offset++];
-      if (length < 24) throw new TypeError('Noncanonical CBOR byte-string length');
-    } else if (initial === 0x59) {
-      if (source.length - offset < 2)
-        throw new TypeError('Truncated CBOR byte-string length');
-      length = source.readUInt16BE(offset);
-      offset += 2;
-      if (length <= 255) throw new TypeError('Noncanonical CBOR byte-string length');
-    } else {
-      throw new TypeError('Expected a definite CBOR byte string');
-    }
-    if (length > source.length - offset)
-      throw new TypeError('Truncated CBOR byte-string content');
-    fields.push({
-      content: ownedBytes(source.subarray(offset, offset + length), 'CBOR content'),
-      encoded: ownedBytes(source.subarray(start, offset + length), 'CBOR field'),
-    });
-    offset += length;
+    const field = readByteString(source, offset);
+    fields.push(field);
+    offset = field.next;
   }
   if (!hasSupport && offset !== source.length)
     throw new TypeError('Trailing synthetic extension map bytes');
@@ -121,6 +127,53 @@ export function decodeSyntheticSignRequest(sourceBytes) {
     toBeSignedBytes: () => ownedBytes(tbs.content, 'to-be-signed content'),
     encodedTbsFieldBytes: () => ownedBytes(tbs.encoded, 'encoded tbs field'),
     supportRequested: supportField !== null,
+  });
+}
+
+// Outer byte framing for the optional args=7 field. The two pinned proposals
+// cite a COSE draft version that does not define COSE_Sign_Args, so these bytes
+// are deliberately opaque. This extractor does not accept a signing operation
+// or classify its COSE parameters, key handle, attestation or CTAP errors.
+export function extractSyntheticSignRequestFraming(sourceBytes) {
+  const source = ownedBytes(sourceBytes, 'synthetic extension map');
+  const members = source[0] - 0xa0;
+  if (members < 2 || members > 4)
+    throw new TypeError('Unexpected synthetic extension map size');
+  let offset = 1;
+  const readField = key => {
+    if (source[offset++] !== key)
+      throw new TypeError('Unexpected synthetic extension map key');
+    const field = readByteString(source, offset);
+    offset = field.next;
+    return field;
+  };
+  const keyHandle = readField(2);
+  const tbs = readField(6);
+  let remaining = members - 2;
+  let args = null;
+  if (remaining > 0 && source[offset] === 7) {
+    args = readField(7);
+    remaining -= 1;
+  }
+  let supportRequested = false;
+  if (remaining > 0) {
+    if (source[offset++] !== 8 || source[offset++] !== 0xf5)
+      throw new TypeError('Sign support request must be true');
+    supportRequested = true;
+    remaining -= 1;
+  }
+  if (remaining !== 0 || offset !== source.length)
+    throw new TypeError('Trailing or duplicate synthetic extension map fields');
+  return Object.freeze({
+    keyHandleBytes: () => ownedBytes(keyHandle.content, 'key handle'),
+    toBeSignedBytes: () => ownedBytes(tbs.content, 'to-be-signed content'),
+    encodedTbsFieldBytes: () => ownedBytes(tbs.encoded, 'encoded tbs field'),
+    argsPresent: args !== null,
+    argsContentBytes: () => args === null ? null :
+      ownedBytes(args.content, 'opaque args content'),
+    encodedArgsFieldBytes: () => args === null ? null :
+      ownedBytes(args.encoded, 'encoded args field'),
+    supportRequested,
   });
 }
 
