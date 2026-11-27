@@ -30,7 +30,7 @@ function canonicalBase64(value, name) {
   const decoded = Buffer.from(value, 'base64');
   if (decoded.toString('base64') !== value)
     throw new TypeError(name + ' must be canonical base64');
-  return decoded;
+  return bytes(decoded, name);
 }
 
 function largestPowerBelow(n) {

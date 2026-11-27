@@ -55,6 +55,7 @@
     {"id": "synthetic-log-configured-key-id", "expected": "RECOMMENDED_AND_ALTERNATE_SIGNED_NOTE_IDS_VERIFIED"},
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
     {"id": "synthetic-log-raw-proof-artifact", "expected": "FIXED_FIELD_ORDER_AND_EXACT_BYTES_RESTORED"},
+    {"id": "synthetic-log-restored-byte-isolation", "expected": "FIELDS_AND_RESTORES_HAVE_INDEPENDENT_EXACT_BACKING"},
     {"id": "synthetic-log-entry-index-read-once", "expected": "ONE_INDEX_USED_THROUGH_ALL_CHECKS"},
     {"id": "synthetic-log-new-outer-snapshot", "expected": "FIRST_IMPRINT_STABLE_SECOND_IMPRINT_REBUILT"},
     {"id": "v6-sparse-parent-child-exclusion", "expected": "SORTED_MATRIX_EXCLUDES_ONE_PAIR"},

@@ -241,6 +241,28 @@ test('raw log artifact restores the original proof without JSON field collapse',
     Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), proofArtifact])), /Malformed/);
 });
 
+test('restored log fields have exact backing separate from other fields and calls', () => {
+  const names = ['checkpointNoteBytes', 'entryBundleBytes', 'levelZeroTileBytes'];
+  for (const changed of names) {
+    const first = restoreSyntheticLogProofArtifact(proofArtifact);
+    const second = restoreSyntheticLogProofArtifact(proofArtifact);
+    const fields = [first, second].flatMap(value => names.map(name => value[name]));
+    for (const field of fields) {
+      assert.equal(field.buffer.byteLength, field.byteLength);
+      assert.notEqual(field.buffer, proofArtifact.buffer);
+    }
+    assert.equal(new Set(fields.map(field => field.buffer)).size, fields.length);
+    const originals = names.map(name => Buffer.from(first[name]));
+    new Uint8Array(first[changed].buffer).fill(0);
+    for (const [index, name] of names.entries()) {
+      if (name !== changed) assert.deepEqual(first[name], originals[index]);
+      assert.deepEqual(second[name], originals[index]);
+    }
+    assert.equal(verifySyntheticTiledLogProof(jws, second, policy()).leafSha256,
+      vector.leafSha256);
+  }
+});
+
 test('entry index is frozen once before bundle, path and result checks', () => {
   const withGetter = proof();
   let reads = 0;
