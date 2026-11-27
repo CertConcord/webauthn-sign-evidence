@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {chooseDraftSigningAlgorithm, decodeDraftSupportList,
+import {chooseDraftChildAttestationFormat, chooseDraftSigningAlgorithm, decodeDraftSupportList,
   historicalPscpChildFormatGate} from './source-v6-model.mjs';
 
 const vector = JSON.parse(readFileSync(new URL('../vectors/source-v6-model.json', import.meta.url)));
@@ -39,10 +39,17 @@ test('invalid sparse matrix positions and shapes cannot imply support', () => {
 });
 
 test('child self attestation fallback and historical PSCP format gate stay distinct', () => {
-  for (const item of vector.childAttestationCases)
+  for (const item of vector.childAttestationCases) {
+    assert.equal(chooseDraftChildAttestationFormat(item.producerInput),
+      item.expectedProducerFormat, item.id);
     assert.equal(historicalPscpChildFormatGate(item.presented),
       item.expectedPscpFormatGate, item.id);
-  assert.equal(vector.childAttestationCases[0].v6ProducerAction, 'MUST_USE_NONE_INSTEAD');
-  assert.equal(vector.childAttestationCases[1].v6ProducerAction, 'PERMITTED_FALLBACK');
+  }
+  assert.notEqual(vector.childAttestationCases[0].presented.format,
+    chooseDraftChildAttestationFormat(vector.childAttestationCases[0].producerInput));
+  assert.equal(vector.childAttestationCases[1].presented.format,
+    chooseDraftChildAttestationFormat(vector.childAttestationCases[1].producerInput));
   assert.equal(vector.childAttestationCases[2].expectedPscpFormatGate, true);
+  assert.throws(() => chooseDraftChildAttestationFormat({preferredFormat: 'packed'}),
+    /self-attestation finding/);
 });

@@ -48,20 +48,23 @@
   "childAttestationCases": [
     {
       "id": "child-self-attestation",
+      "producerInput": {"preferredFormat": "packed", "wouldSelfAttest": true},
+      "expectedProducerFormat": "none",
       "presented": {"format": "packed", "trustedPackedX5c": false, "selfAttested": true},
-      "v6ProducerAction": "MUST_USE_NONE_INSTEAD",
       "expectedPscpFormatGate": false
     },
     {
       "id": "child-none-fallback",
+      "producerInput": {"preferredFormat": "packed", "wouldSelfAttest": true},
+      "expectedProducerFormat": "none",
       "presented": {"format": "none", "trustedPackedX5c": false, "selfAttested": false},
-      "v6ProducerAction": "PERMITTED_FALLBACK",
       "expectedPscpFormatGate": false
     },
     {
       "id": "trusted-packed-child",
+      "producerInput": {"preferredFormat": "packed", "wouldSelfAttest": false},
+      "expectedProducerFormat": "packed",
       "presented": {"format": "packed", "trustedPackedX5c": true, "selfAttested": false},
-      "v6ProducerAction": "NON_SELF_ATTESTATION_POSSIBLE",
       "expectedPscpFormatGate": true
     }
   ]

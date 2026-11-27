@@ -77,6 +77,16 @@ export function chooseDraftSigningAlgorithm(parentAlgorithm, candidates, support
   return {error: unsupportedCombination ? 3 : 2};
 }
 
+// The source's producer choice after an external finding that the preferred
+// child attestation would (or would not) be a self attestation. This does not
+// determine attestation type, create an attestation object, or verify one.
+export function chooseDraftChildAttestationFormat({preferredFormat, wouldSelfAttest}) {
+  if (typeof preferredFormat !== 'string' || preferredFormat.length === 0 ||
+      typeof wouldSelfAttest !== 'boolean')
+    throw new TypeError('Child attestation choice requires format and self-attestation finding');
+  return wouldSelfAttest ? 'none' : preferredFormat;
+}
+
 // Only the historical PSCP adapter's attestation format gate is represented.
 // A true result is not full admission: parent ceremony, chain, policy and possession remain external.
 export function historicalPscpChildFormatGate({format, trustedPackedX5c, selfAttested}) {
