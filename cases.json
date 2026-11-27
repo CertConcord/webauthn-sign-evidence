@@ -36,6 +36,13 @@
     {"id": "outer-record-duplicate-decoded-member-name", "expected": "REJECTED_BEFORE_FIELD_COLLAPSE"},
     {"id": "outer-record-independent-backing-storage", "expected": "RETAINED_BYTES_UNCHANGED_BY_RETURNED_VIEWS"},
     {"id": "outer-record-overridden-input-length", "expected": "INTRINSIC_BYTE_EXTENT_ONLY"},
-    {"id": "outer-record-forged-byte-prototype", "expected": "REJECT_NON_NATIVE_BYTE_INPUT"}
+    {"id": "outer-record-forged-byte-prototype", "expected": "REJECT_NON_NATIVE_BYTE_INPUT"},
+    {"id": "later-timestamp-exact-snapshot-imprint", "expected": "SECOND_REQUEST_AND_TEST_RESPONSE_MATCH_FROZEN_SNAPSHOT"},
+    {"id": "later-timestamp-outside-target", "expected": "LATER_REQUEST_AND_RESPONSE_NOT_IN_SNAPSHOT"},
+    {"id": "later-timestamp-json-reserialization", "expected": "FIRST_MATCH_SECOND_MISMATCH"},
+    {"id": "later-timestamp-changed-log", "expected": "FIRST_MATCH_SECOND_MISMATCH"},
+    {"id": "later-timestamp-changed-jws", "expected": "BOTH_MISMATCH"},
+    {"id": "later-timestamp-changed-request-or-response", "expected": "SECOND_TRANSACTION_REVALIDATION_REQUIRED"},
+    {"id": "later-timestamp-record-roundtrip", "expected": "EXACT_SNAPSHOT_AND_OWNED_BYTES_PRESERVED"}
   ]
 }

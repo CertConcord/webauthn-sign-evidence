@@ -8,6 +8,8 @@ The synthetic response tests also isolate the TSA certificate identifier from th
 
 A [synthetic outer byte record](vectors/outer-evidence.json) retains the frozen JWS, original request DER, response DER and a later opaque log artifact in separate fields. Restore rejects duplicate decoded JSON field names, and retained and returned bytes use independent backing storage. Its tests distinguish storage and first-imprint coverage from response validation and log-proof validation. This record does not select RFC 5544, an archive profile, or a transparency-log protocol.
 
+A [second synthetic timestamp vector](vectors/later-timestamp.json) freezes the exact serialized outer record after its first response and opaque log bytes have been retained. A separate request hashes that snapshot; its request and response remain outside the snapshot. Byte changes, JSON reserialization and restoration test the two imprint boundaries independently under a fixed test-root replay epoch. This is an application candidate, not a trusted timestamp renewal or log proof.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check
