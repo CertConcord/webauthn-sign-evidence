@@ -5,9 +5,11 @@ import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {prepareSyntheticCompactJws} from './optional-jws.mjs';
 
 const source = JSON.parse(readFileSync(new URL('../vectors/optional-jws.json', import.meta.url)));
 const vector = JSON.parse(readFileSync(new URL('../vectors/optional-jws-response.json', import.meta.url)));
+const validMismatch = JSON.parse(readFileSync(new URL('../vectors/optional-jws-valid-imprint-mismatch.json', import.meta.url)));
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const fromHex = value => Buffer.from(value, 'hex');
 const fromBase64 = value => Buffer.from(value, 'base64');
@@ -19,7 +21,7 @@ function runOpenSsl(args) {
   return result;
 }
 
-function verifyResponse({response, request, artifact, root}) {
+function verifyResponse({response, request, artifact, root, epoch = replayEpoch}) {
   const directory = mkdtempSync(join(tmpdir(), 'webauthn-ts-test-'));
   try {
     const responsePath = join(directory, 'response.der');
@@ -27,7 +29,7 @@ function verifyResponse({response, request, artifact, root}) {
     writeFileSync(responsePath, response);
     writeFileSync(rootPath, root);
     const args = ['ts', '-verify', '-in', responsePath, '-CAfile', rootPath,
-      '-attime', replayEpoch];
+      '-attime', epoch];
     if (request) {
       const path = join(directory, 'request.der');
       writeFileSync(path, request);
@@ -179,6 +181,124 @@ test('changed signature octet and reserialized, correctly re-signed JWS fail the
   changed[signatureStart] = 0x42;
   assert.deepEqual(changed, artifact);
   assert.equal(verifyResponse({response, artifact: changed, root: testRoot}).status, 0);
+});
+
+test('a validly signed token for another complete JWS cannot claim the original imprint', () => {
+  const alternate = Buffer.from(source.reserializedCompactAscii, 'ascii');
+  const alternateRequest = fromHex(validMismatch.alternateRequestDerHex);
+  const alternateResponse = fromBase64(validMismatch.alternateResponseDerBase64);
+  const epoch = String(validMismatch.verificationEpochSeconds);
+  assert.equal(sha256(alternate), validMismatch.alternateCompleteJwsSha256);
+  assert.equal(sha256(artifact), validMismatch.originalCompleteJwsSha256);
+  assert.notEqual(validMismatch.alternateCompleteJwsSha256,
+    validMismatch.originalCompleteJwsSha256);
+  assert.equal(sha256(alternateRequest), validMismatch.requestSha256);
+  assert.equal(sha256(alternateResponse), validMismatch.responseSha256);
+  const sameFieldsAsOriginal = Buffer.from(alternateRequest);
+  const imprintOffset = sameFieldsAsOriginal.indexOf(
+    fromHex(validMismatch.alternateCompleteJwsSha256));
+  assert.notEqual(imprintOffset, -1);
+  fromHex(validMismatch.originalCompleteJwsSha256)
+    .copy(sameFieldsAsOriginal, imprintOffset);
+  assert.deepEqual(sameFieldsAsOriginal, request);
+  assert(Date.parse(validMismatch.tokenGenTime) <
+    validMismatch.verificationEpochSeconds * 1000);
+  assert.equal(validMismatch.privateKeyPublished, false);
+  assert.equal(validMismatch.trustedTimeEstablished, false);
+  assert.equal(validMismatch.responseTimelinessEstablished, false);
+  const completed = prepareSyntheticCompactJws(
+    fromHex(source.reserializedHeaderUtf8Hex), fromHex(source.payloadHex))
+    .complete(fromHex(source.reserializedSignatureHex),
+      fromHex(source.publicKeySpkiDerHex));
+  assert.deepEqual(completed.serializedBytes(), alternate);
+
+  for (const input of [{request: alternateRequest}, {artifact: alternate}]) {
+    const positive = verifyResponse({response: alternateResponse, ...input,
+      root: testRoot, epoch});
+    assert.equal(positive.status, 0, positive.stderr);
+    assert.match(positive.stdout, /Verification: OK/);
+  }
+  for (const input of [{request}, {artifact}]) {
+    const rejected = verifyResponse({response: alternateResponse, ...input,
+      root: testRoot, epoch});
+    assert.notEqual(rejected.status, 0);
+    assert.match(rejected.stdout, /Verification: FAILED/);
+    assert.match(rejected.stderr, /message imprint mismatch/i);
+  }
+
+  const directory = mkdtempSync(join(tmpdir(), 'webauthn-ts-imprint-'));
+  try {
+    const responsePath = join(directory, 'response.der');
+    const tokenPath = join(directory, 'token.der');
+    const contentPath = join(directory, 'content.der');
+    const rootPath = join(directory, 'root.pem');
+    writeFileSync(responsePath, alternateResponse);
+    writeFileSync(rootPath, testRoot);
+    const described = runOpenSsl(['ts', '-reply', '-in', responsePath, '-text']);
+    assert.equal(described.status, 0, described.stderr);
+    const renderedTime = described.stdout.match(/Time stamp: (.+ GMT)/);
+    assert(renderedTime);
+    assert.equal(Date.parse(renderedTime[1]), Date.parse(validMismatch.tokenGenTime));
+    const extracted = runOpenSsl(['ts', '-reply', '-in', responsePath,
+      '-token_out', '-out', tokenPath]);
+    assert.equal(extracted.status, 0, extracted.stderr);
+    const cms = runOpenSsl(['cms', '-verify', '-binary', '-inform', 'DER', '-in', tokenPath,
+      '-CAfile', rootPath, '-purpose', 'any', '-attime', epoch,
+      '-out', contentPath]);
+    assert.equal(cms.status, 0, cms.stderr);
+    assert.match(cms.stderr, /CMS Verification successful/);
+    const signedContent = readFileSync(contentPath);
+    assert.equal(signedContent.length, 139);
+    const readDer = (bytes, offset) => {
+      assert(offset + 2 <= bytes.length);
+      const tag = bytes[offset];
+      const marker = bytes[offset + 1];
+      let length = marker;
+      let headerLength = 2;
+      if (marker & 0x80) {
+        const octets = marker & 0x7f;
+        assert(octets > 0 && octets <= 4 && offset + 2 + octets <= bytes.length);
+        length = 0;
+        for (let index = 0; index < octets; index += 1) {
+          length = (length * 256) + bytes[offset + 2 + index];
+        }
+        assert(length >= 128);
+        headerLength += octets;
+      }
+      const valueStart = offset + headerLength;
+      const end = valueStart + length;
+      assert(end <= bytes.length);
+      return {tag, valueStart, end};
+    };
+    const tstInfo = readDer(signedContent, 0);
+    assert.equal(tstInfo.tag, 0x30);
+    assert.equal(tstInfo.end, signedContent.length);
+    const version = readDer(signedContent, tstInfo.valueStart);
+    assert.equal(version.tag, 0x02);
+    const policy = readDer(signedContent, version.end);
+    assert.equal(policy.tag, 0x06);
+    const imprint = readDer(signedContent, policy.end);
+    assert.equal(imprint.tag, 0x30);
+    const algorithm = readDer(signedContent, imprint.valueStart);
+    assert.equal(algorithm.tag, 0x30);
+    const oid = readDer(signedContent, algorithm.valueStart);
+    assert.equal(oid.tag, 0x06);
+    assert.deepEqual(signedContent.subarray(oid.valueStart, oid.end),
+      fromHex('608648016503040201'));
+    const nullParameter = readDer(signedContent, oid.end);
+    assert.equal(nullParameter.tag, 0x05);
+    assert.equal(nullParameter.valueStart, nullParameter.end);
+    assert.equal(nullParameter.end, algorithm.end);
+    const digest = readDer(signedContent, algorithm.end);
+    assert.equal(digest.tag, 0x04);
+    assert.equal(digest.end, imprint.end);
+    assert.deepEqual(signedContent.subarray(digest.valueStart, digest.end),
+      fromHex(validMismatch.alternateCompleteJwsSha256));
+    assert.notDeepEqual(signedContent.subarray(digest.valueStart, digest.end),
+      fromHex(validMismatch.originalCompleteJwsSha256));
+  } finally {
+    rmSync(directory, {recursive: true, force: true});
+  }
 });
 
 test('response imprint mutation, invalid status/token pairing and wrong test root fail', () => {
