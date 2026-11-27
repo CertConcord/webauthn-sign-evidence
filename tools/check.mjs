@@ -36,6 +36,11 @@ assert.equal(argsFraming.source.citedCoseIndividual01Sha256,
   relatedIetfDrafts[0].sha256);
 assert.equal(argsFraming.source.laterCoseWg01Sha256,
   relatedIetfDrafts[1].sha256);
+const precopy = json('vectors/source-v6-cbor-precopy.json');
+assert.equal(precopy.maxRequestBytes, 1 + 3 * (1 + 3 + precopy.fieldContentBytes) + 2);
+assert.equal(precopy.overLimitBytes, precopy.maxRequestBytes + 1);
+for (const digest of [precopy.maxRequestSha256, precopy.overLimitSha256])
+  assert.match(digest, /^[a-f0-9]{64}$/);
 
 const vector = json('vectors/direct-input.json');
 for (const field of ['tbsHex', 'tbsSha256', 'signatureHex', 'publicKeySpkiDerHex',

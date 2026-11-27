@@ -1,0 +1,11 @@
+{
+  "scope": "Local fixed-order synthetic CBOR parser bound; not a WebAuthn or CTAP message-size limit",
+  "fieldContentBytes": 65535,
+  "fieldFillHex": "a5",
+  "maxRequestSegmentsHex": ["a40259ffff", "0659ffff", "0759ffff", "08f5"],
+  "maxRequestBytes": 196620,
+  "maxRequestSha256": "ac7127d68a12b1de12022ecc680d9bf6e76afbd78668dad6c5aaf2a1d0739c3e",
+  "overLimitFillHex": "00",
+  "overLimitBytes": 196621,
+  "overLimitSha256": "6976991548ecdff5fe5b7bde7f7cc83a1d134218666b9ee1d385fa5905e1b199"
+}

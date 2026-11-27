@@ -32,6 +32,8 @@ A [sign plus optional support CBOR vector](vectors/source-v6-sign-support-cbor.j
 
 An [optional `args` outer-framing vector](vectors/source-v6-args-framing.json) extracts the exact content and encoded byte-string field of inner request key 7, with or without key 8 (`support:true`), while retaining the existing no-`args` controls. It uses a separate extractor: the signing request decoder still rejects unvalidated `args`. Both pinned WebAuthn proposals cite a [COSE individual draft `-01`](https://www.ietf.org/archive/id/draft-lundberg-cose-two-party-signing-algs-01.txt) that lacks their named `COSE_Sign_Args`; a [later WG `-01`](https://www.ietf.org/archive/id/draft-ietf-cose-split-signing-algs-01.txt) defines that structure but is not selected here. Extracted contents remain opaque, so this vector does not validate COSE members, error codes 5–8, a signing algorithm, key-handle integrity or a signature made with `args`.
 
+A [bounded-copy CBOR vector](vectors/source-v6-cbor-precopy.json) pins this synthetic parser's maximum representable fixed-order request map and the adjacent impossible size. The three public CBOR entry points reject an over-limit map before allocating a complete input snapshot, even if a native byte view overrides its visible length. The 196,620-byte bound follows this local decoder's supported fields and byte-string encoding; it is not a WebAuthn or CTAP transport limit.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check

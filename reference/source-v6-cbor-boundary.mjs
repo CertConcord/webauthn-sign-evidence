@@ -1,10 +1,32 @@
 import {types} from 'node:util';
 import {decodeDraftSupportList} from './source-v6-model.mjs';
 
+// This local fixed-order subset admits at most three 65,535-byte bstr fields,
+// their three-byte headers and one-byte keys, the map header and support:true.
+// It is a parser bound, not a WebAuthn or CTAP message-size requirement.
+const MAX_SYNTHETIC_MAP_BYTES = 1 + 3 * (1 + 3 + 65535) + 2;
+const nativeByteLength = Object.getOwnPropertyDescriptor(
+  Object.getPrototypeOf(Uint8Array.prototype), 'byteLength').get;
+
 function ownedBytes(value, name) {
   if (!types.isUint8Array(value))
     throw new TypeError(`${name} must be native bytes`);
   return Buffer.from(new Uint8Array(value).buffer);
+}
+
+function snapshotSyntheticMap(value) {
+  if (!types.isUint8Array(value))
+    throw new TypeError('synthetic extension map must be native bytes');
+  const length = nativeByteLength.call(value);
+  if (length > MAX_SYNTHETIC_MAP_BYTES)
+    throw new TypeError('synthetic CBOR map exceeds local limit');
+  const snapshot = Buffer.alloc(length);
+  try {
+    Uint8Array.prototype.set.call(snapshot, value);
+  } catch (cause) {
+    throw new TypeError('synthetic extension map changed during snapshot', {cause});
+  }
+  return snapshot;
 }
 
 // A deliberately narrow view of the draft's inner authenticator extension map.
@@ -39,7 +61,7 @@ function readByteString(source, start) {
 }
 
 function decodeMap(sourceBytes, members) {
-  const source = ownedBytes(sourceBytes, 'synthetic extension map');
+  const source = snapshotSyntheticMap(sourceBytes);
   const hasSupport = source[0] === 0xa0 + members.length + 1;
   if (source[0] !== 0xa0 + members.length && !hasSupport)
     throw new TypeError('Unexpected synthetic extension map size');
@@ -135,7 +157,7 @@ export function decodeSyntheticSignRequest(sourceBytes) {
 // are deliberately opaque. This extractor does not accept a signing operation
 // or classify its COSE parameters, key handle, attestation or CTAP errors.
 export function extractSyntheticSignRequestFraming(sourceBytes) {
-  const source = ownedBytes(sourceBytes, 'synthetic extension map');
+  const source = snapshotSyntheticMap(sourceBytes);
   const members = source[0] - 0xa0;
   if (members < 2 || members > 4)
     throw new TypeError('Unexpected synthetic extension map size');
