@@ -18,6 +18,7 @@ const laterVector = load('later-timestamp.json');
 const vector = load('log-proof.json');
 const rfcExample = load('log-proof-rfc6962-example.json');
 const policyVector = load('log-test-policy.json');
+const inputBoundary = load('log-input-boundary.json');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const decode = value => Buffer.from(value, 'base64');
 const jws = Buffer.from(jwsVector.compactAscii, 'ascii');
@@ -337,6 +338,86 @@ test('only a separately accepted old checkpoint can establish append-only contin
   assert.throws(() => verifySyntheticTiledLogProof(jws,
     proof({consistencyPathHex: vector.proof.consistencyPathHex.slice(0, -1)}),
     policy()), /Short consistency path/);
+});
+
+test('local artifact and both checkpoint bounds reject before copying input bytes', () => {
+  const limit = inputBoundary.maximumBytes;
+  const admitted = Buffer.alloc(limit, Number.parseInt(inputBoundary.byteValueHex, 16));
+  const tooLong = Buffer.alloc(inputBoundary.adjacentOversizeBytes,
+    Number.parseInt(inputBoundary.byteValueHex, 16));
+  assert.equal(sha(admitted), inputBoundary.atMaximumSha256);
+  assert.equal(sha(tooLong), inputBoundary.adjacentOversizeSha256);
+  const nativeUint8Array = globalThis.Uint8Array;
+  const nativeBufferFrom = Buffer.from;
+  let target;
+  let copiedBacking;
+  let observations;
+  globalThis.Uint8Array = class extends nativeUint8Array {
+    constructor(value, ...args) {
+      super(value, ...args);
+      if (value === target) {
+        copiedBacking = this.buffer;
+        observations.push('input copy');
+      }
+    }
+  };
+  Buffer.from = function(value, ...args) {
+    if (value === copiedBacking) observations.push('owned backing');
+    return nativeBufferFrom.call(this, value, ...args);
+  };
+  const check = (input, run, error, expected, proofReads) => {
+    target = input;
+    copiedBacking = undefined;
+    observations = [];
+    assert.throws(run, error);
+    assert.deepEqual(observations, expected);
+    if (proofReads !== undefined) assert.equal(proofReads(), expected.includes('proof read') ? 1 : 0);
+  };
+  try {
+    for (const [name, run, admittedError, rejectedError] of [
+      ['artifact', input => () => restoreSyntheticLogProofArtifact(input),
+        /Malformed synthetic log proof artifact/, /Log proof artifact is empty or too long/],
+      ['current checkpoint', input => () => verifySyntheticTiledLogProof(jws,
+        proof({checkpointNoteBytes: input}), policy()),
+        /Malformed signed note/, /Checkpoint is empty or outside/],
+      ['previous checkpoint', input => {
+        let reads = 0;
+        const inputProof = proof();
+        Object.defineProperty(inputProof, 'checkpointNoteBytes', {get() {
+          reads += 1;
+          observations.push('proof read');
+          return decode(vector.proof.checkpointNoteBase64);
+        }});
+        return {run: () => verifySyntheticTiledLogProof(jws, inputProof,
+          policy({previousCheckpointNoteBytes: input})), reads: () => reads};
+      }, /Malformed signed note/, /Checkpoint is empty or outside/],
+    ]) {
+      const admittedCall = run(admitted);
+      const admittedRun = typeof admittedCall === 'function' ? admittedCall : admittedCall.run;
+      const admittedReads = typeof admittedCall === 'function' ? undefined : admittedCall.reads;
+      const admittedExpected = name === 'previous checkpoint'
+        ? ['input copy', 'owned backing', 'proof read']
+        : ['input copy', 'owned backing'];
+      check(admitted, admittedRun, admittedError, admittedExpected, admittedReads);
+      const rejectedCall = run(tooLong);
+      check(tooLong, typeof rejectedCall === 'function' ? rejectedCall : rejectedCall.run,
+        rejectedError, [], typeof rejectedCall === 'function' ? undefined : rejectedCall.reads);
+      const spoofed = Buffer.alloc(limit + 1, 0x61);
+      Object.defineProperties(spoofed, {
+        length: {value: 1}, byteLength: {value: 1},
+      });
+      const spoofedCall = run(spoofed);
+      check(spoofed, typeof spoofedCall === 'function' ? spoofedCall : spoofedCall.run,
+        rejectedError, [], typeof spoofedCall === 'function' ? undefined : spoofedCall.reads);
+      const empty = Buffer.alloc(0);
+      const emptyCall = run(empty);
+      check(empty, typeof emptyCall === 'function' ? emptyCall : emptyCall.run,
+        rejectedError, [], typeof emptyCall === 'function' ? undefined : emptyCall.reads);
+    }
+  } finally {
+    Buffer.from = nativeBufferFrom;
+    globalThis.Uint8Array = nativeUint8Array;
+  }
 });
 
 test('raw log artifact restores the original proof without JSON field collapse', () => {
