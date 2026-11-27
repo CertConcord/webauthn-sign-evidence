@@ -16,6 +16,7 @@ const jwsVector = load('optional-jws.json');
 const firstVector = load('optional-jws-response.json');
 const laterVector = load('later-timestamp.json');
 const vector = load('log-proof.json');
+const rfcExample = load('log-proof-rfc6962-example.json');
 const policyVector = load('log-test-policy.json');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const decode = value => Buffer.from(value, 'base64');
@@ -93,6 +94,76 @@ test('exact JWS digest entry binds to a trusted test-key checkpoint and prior tr
   assert.equal(vector.claims.deployedLog, false);
   assert.equal(vector.claims.trustedLogKeyEstablished, false);
   assert.equal(vector.claims.logWitnessOrMonitorEstablished, false);
+});
+
+test('RFC 6962 seven-leaf example paths bind three independently signed prior sizes', () => {
+  const fromHex = value => Buffer.from(value, 'hex');
+  const hash = value => fromHex(sha(value));
+  const leaf = value => hash(Buffer.concat([Buffer.from([0]), value]));
+  const node = (left, right) => hash(Buffer.concat([Buffer.from([1]), left, right]));
+  const entryBundle = decode(rfcExample.entryBundleBase64);
+  const entries = [];
+  for (let offset = 0; offset < entryBundle.length;) {
+    const length = entryBundle.readUInt16BE(offset);
+    offset += 2;
+    entries.push(entryBundle.subarray(offset, offset + length));
+    offset += length;
+  }
+  assert.equal(entries.length, 7);
+  assert.deepEqual(entries[6], syntheticJwsLogEntry(jws));
+  assert.equal(sha(jws), rfcExample.jwsSha256);
+  const [a, b, c, d, e, f, j] = entries.map(leaf);
+  const g = node(a, b);
+  const h = node(c, d);
+  const i = node(e, f);
+  const k = node(g, h);
+  const l = node(i, j);
+  const named = {a, b, c, d, e, f, g, h, i, j, k, l};
+  assert.deepEqual(Object.fromEntries(Object.entries(named).map(([name, value]) =>
+    [name, value.toString('hex')])), rfcExample.nodeHex);
+  assert.deepEqual(rfcExample.rootHex, {
+    '3': node(g, c).toString('hex'), '4': k.toString('hex'),
+    '6': node(k, i).toString('hex'), '7': node(k, l).toString('hex'),
+  });
+  assert.deepEqual(rfcExample.inclusionPathHex, [i, k].map(value => value.toString('hex')));
+  assert.deepEqual(decode(rfcExample.levelZeroTileBase64), Buffer.concat(entries.map(leaf)));
+  assert.equal(rfcExample.privateKeyPublished, false);
+  assert.equal(rfcExample.deployedLogEstablished, false);
+  assert.equal(rfcExample.trustedTimeEstablished, false);
+
+  const baseProof = {
+    entryIndex: rfcExample.entryIndex,
+    checkpointNoteBytes: decode(rfcExample.currentCheckpointBase64),
+    entryBundleBytes: entryBundle,
+    levelZeroTileBytes: decode(rfcExample.levelZeroTileBase64),
+    inclusionPathHex: rfcExample.inclusionPathHex,
+  };
+  for (const previousSize of [3, 4, 6]) {
+    const prior = rfcExample.prior[previousSize];
+    assert.deepEqual(prior.consistencyPathHex,
+      prior.rfcNodes.map(name => rfcExample.nodeHex[name]));
+    const externalPolicy = {
+      origin: rfcExample.origin, keyName: rfcExample.keyName,
+      keyIdHex: rfcExample.keyIdHex, publicKeyRawHex: rfcExample.publicKeyRawHex,
+      previousCheckpointNoteBytes: decode(prior.checkpointBase64),
+    };
+    const proofBytes = {...baseProof, consistencyPathHex: prior.consistencyPathHex};
+    const checked = verifySyntheticTiledLogProof(jws, proofBytes, externalPolicy);
+    assert.equal(checked.previousSize, previousSize);
+    assert.equal(checked.currentSize, 7);
+    assert.equal(checked.index, 6);
+    const changed = [...prior.consistencyPathHex];
+    changed[0] = (changed[0][0] === '0' ? '1' : '0') + changed[0].slice(1);
+    assert.throws(() => verifySyntheticTiledLogProof(jws,
+      {...proofBytes, consistencyPathHex: changed}, externalPolicy),
+    /consistency proof failed/);
+  }
+  assert.throws(() => verifySyntheticTiledLogProof(jws,
+    {...baseProof, consistencyPathHex: rfcExample.prior['4'].consistencyPathHex},
+    {origin: rfcExample.origin, keyName: rfcExample.keyName,
+      keyIdHex: rfcExample.keyIdHex, publicKeyRawHex: rfcExample.publicKeyRawHex,
+      previousCheckpointNoteBytes: decode(rfcExample.prior['3'].checkpointBase64)}),
+  /consistency proof failed|Short consistency path/);
 });
 
 test('returned log entries cannot change another view or the versioned label', () => {

@@ -57,6 +57,8 @@
     {"id": "synthetic-log-trust-identity-read-once", "expected": "BOTH_CHECKPOINTS_USE_ONE_POLICY_IDENTITY"},
     {"id": "synthetic-log-prior-checkpoint-byte-snapshot", "expected": "PROOF_GETTER_CANNOT_REPLACE_ACCEPTED_PRIOR"},
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
+    {"id": "synthetic-log-rfc6962-seven-leaf-paths", "expected": "THREE_PRIOR_SIZES_AND_INCLUSION_VERIFIED"},
+    {"id": "synthetic-log-rfc6962-altered-consistency-node", "expected": "THREE_CHANGED_PATHS_REJECTED"},
     {"id": "synthetic-log-raw-proof-artifact", "expected": "FIXED_FIELD_ORDER_AND_EXACT_BYTES_RESTORED"},
     {"id": "synthetic-log-restored-byte-isolation", "expected": "FIELDS_AND_RESTORES_HAVE_INDEPENDENT_EXACT_BACKING"},
     {"id": "synthetic-log-entry-index-read-once", "expected": "ONE_INDEX_USED_THROUGH_ALL_CHECKS"},
