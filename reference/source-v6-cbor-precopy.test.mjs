@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-import {types} from 'node:util';
 import {decodeSyntheticSignRequest, decodeSyntheticSignResponse,
         extractSyntheticSignRequestFraming} from './source-v6-cbor-boundary.mjs';
 
@@ -21,22 +20,31 @@ test('synthetic CBOR entries reject impossible map sizes before a full copy', ()
   const NativeUint8Array = globalThis.Uint8Array;
   const originalAlloc = Buffer.alloc;
   const originalSet = NativeUint8Array.prototype.set;
+  const viewPrototype = Object.getPrototypeOf(NativeUint8Array.prototype);
+  const viewBuffer = Object.getOwnPropertyDescriptor(viewPrototype, 'buffer').get;
+  const viewOffset = Object.getOwnPropertyDescriptor(viewPrototype, 'byteOffset').get;
+  const viewLength = Object.getOwnPropertyDescriptor(viewPrototype, 'byteLength').get;
   const observed = [];
   let activeInput;
   let activeSize;
+  let fixedSource;
   Buffer.alloc = function(size, ...args) {
     if (size === activeSize) observed.push('input-sized allocation');
     return originalAlloc.call(this, size, ...args);
   };
   NativeUint8Array.prototype.set = function(value, ...args) {
-    if (value === activeInput) observed.push('input-byte copy');
+    if (value === fixedSource) observed.push('input-byte copy');
     return originalSet.call(this, value, ...args);
   };
   globalThis.Uint8Array = class extends NativeUint8Array {
     constructor(value, ...args) {
-      if (types.isUint8Array(value) && value === activeInput)
-        observed.push('input copy constructor');
       super(value, ...args);
+      if (activeInput && value === viewBuffer.call(activeInput) &&
+          args[0] === viewOffset.call(activeInput) &&
+          args[1] === viewLength.call(activeInput)) {
+        fixedSource = this;
+        observed.push('fixed input source');
+      }
     }
   };
   try {
@@ -48,7 +56,10 @@ test('synthetic CBOR entries reject impossible map sizes before a full copy', ()
       activeInput = valid;
       activeSize = valid.byteLength;
       observed.length = 0;
+      fixedSource = undefined;
       assert.ok(decode(valid));
+      assert(observed.includes('fixed input source'),
+        'normal input must construct the observed fixed source');
       assert(observed.includes('input-sized allocation'),
         'normal input must exercise the observed snapshot allocator');
       assert(observed.includes('input-byte copy'),
@@ -56,6 +67,7 @@ test('synthetic CBOR entries reject impossible map sizes before a full copy', ()
       activeInput = invalid;
       activeSize = vector.overLimitBytes;
       observed.length = 0;
+      fixedSource = undefined;
       assert.throws(() => decode(invalid), /synthetic CBOR map exceeds local limit/);
       assert.deepEqual(observed, [],
         'over-limit input must reject before any observed full snapshot');

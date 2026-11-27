@@ -112,6 +112,8 @@
     {"id": "v6-cose-args-mismatch-is-six", "expected": "CONDITIONAL_ERROR_6"},
     {"id": "v6-cose-args-match-passes-stage", "expected": "ARGS_ALG_STAGE_PASSED"},
     {"id": "v6-cbor-precopy-over-limit", "expected": "REJECTED_BEFORE_FULL_COPY"},
-    {"id": "v6-cbor-precopy-max-supported-map", "expected": "EXACT_BOUNDARY_ACCEPTED"}
+    {"id": "v6-cbor-precopy-max-supported-map", "expected": "EXACT_BOUNDARY_ACCEPTED"},
+    {"id": "v6-cbor-resizable-input-shrinks-during-copy", "expected": "ALL_THREE_ENTRIES_REJECT_PARTIAL_SNAPSHOT"},
+    {"id": "v6-cbor-resizable-input-grows-after-admission", "expected": "ALL_THREE_ENTRIES_KEEP_ADMITTED_BYTES"}
   ]
 }

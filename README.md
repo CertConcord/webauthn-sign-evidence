@@ -40,6 +40,8 @@ A separate [conditional `args` decision vector](vectors/source-v6-cose-args-cond
 
 A [bounded-copy CBOR vector](vectors/source-v6-cbor-precopy.json) pins this synthetic parser's maximum representable fixed-order request map and the adjacent impossible size. The three public CBOR entry points reject an over-limit map before allocating a complete input snapshot, even if a native byte view overrides its visible length. The 196,620-byte bound follows this local decoder's supported fields and byte-string encoding; it is not a WebAuthn or CTAP transport limit.
 
+The [resizable-view snapshot vector](vectors/source-v6-cbor-shrink-snapshot.json) checks the same three CBOR entry points when an admitted length-tracking ArrayBuffer view changes before its bytes are copied. A seven-byte request and four-byte response must be rejected if shrinking would leave an unwritten zero tail in the private copy. Growth after admission still preserves the original fixed byte range. This protects the sample's exact extracted `tbs` or signature bytes. Callers must keep the input content stable during copying; this check does not detect concurrent writes to shared backing storage.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check
