@@ -4,7 +4,7 @@ import {createHash, createPublicKey, verify} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {decodeSyntheticSignRequest, decodeSyntheticSignResponse} from
   './source-v6-cbor-boundary.mjs';
-import {decodeDraftSupportList} from './source-v6-model.mjs';
+import {chooseDraftSigningAlgorithm, decodeDraftSupportList} from './source-v6-model.mjs';
 import {prepareSyntheticCompactJws} from './optional-jws.mjs';
 
 const vector = JSON.parse(readFileSync(
@@ -71,6 +71,31 @@ test('sparse support CBOR retains index positions and a larger child algorithm',
     encoded.subarray(0, largeNegative), hex('3a0000012b'),
     encoded.subarray(largeNegative + 3)]);
   assert.throws(() => decodeSyntheticSignResponse(overlong), /Noncanonical/);
+});
+
+test('both COSE algorithm axes accept signed 32-bit endpoints and reject neighbors', () => {
+  assert.equal(vector.algorithmIdentifierBoundaryCases.length, 8);
+  for (const item of vector.algorithmIdentifierBoundaryCases) {
+    const encoded = hex(item.responseMapHex);
+    assert.equal(sha256(encoded), item.responseMapSha256, item.id);
+    const parent = item.axis === 'parent' ? item.identifier : -7;
+    const child = item.axis === 'child' ? item.identifier : -8;
+    const support = [[parent], [child]];
+    if (!item.accepted) {
+      assert.throws(() => decodeDraftSupportList(support), /signed 32-bit/, item.id);
+      assert.throws(() => decodeSyntheticSignResponse(encoded), /signed 32-bit/, item.id);
+      continue;
+    }
+    assert.deepEqual(decodeSyntheticSignResponse(encoded).supportList(), support, item.id);
+    assert.deepEqual(decodeDraftSupportList(support).pairs, [[parent, child]], item.id);
+  }
+  const support = decodeDraftSupportList([[-2147483648], [2147483647]]);
+  assert.deepEqual(chooseDraftSigningAlgorithm(-2147483648, [2147483647], support),
+    {chosenAlgorithm: 2147483647});
+  assert.throws(() => chooseDraftSigningAlgorithm(-2147483649,
+    [2147483647], support), /signed 32-bit/);
+  assert.throws(() => chooseDraftSigningAlgorithm(-2147483648,
+    [2147483648], support), /signed 32-bit/);
 });
 
 test('false support and empty or malformed support arrays are rejected', () => {

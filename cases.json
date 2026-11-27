@@ -90,6 +90,8 @@
     {"id": "v6-cbor-sparse-support-list", "expected": "DECODED_INDEX_MATRIX_PAIRS"},
     {"id": "v6-cbor-omitted-support", "expected": "CAPABILITY_UNKNOWN"},
     {"id": "v6-cbor-false-or-empty-support", "expected": "REJECTED"},
-    {"id": "v6-cbor-noncanonical-support", "expected": "REJECTED"}
+    {"id": "v6-cbor-noncanonical-support", "expected": "REJECTED"},
+    {"id": "v6-cbor-algorithm-identifier-endpoints", "expected": "SIGNED_32_BIT_ENDPOINTS_ACCEPTED_ON_BOTH_AXES"},
+    {"id": "v6-cbor-algorithm-identifier-neighbors", "expected": "ADJACENT_OUT_OF_RANGE_VALUES_REJECTED_ON_BOTH_AXES"}
   ]
 }
