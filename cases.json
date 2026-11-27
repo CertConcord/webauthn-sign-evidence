@@ -54,6 +54,7 @@
     {"id": "synthetic-log-note-origin-root-signature-or-key", "expected": "INDEPENDENT_LOG_POLICY_REJECTED"},
     {"id": "synthetic-log-note-raw-text-and-signature-identity", "expected": "BOM_OR_DUPLICATE_SIGNATURE_IDENTITY_REJECTED"},
     {"id": "synthetic-log-configured-key-id", "expected": "RECOMMENDED_AND_ALTERNATE_SIGNED_NOTE_IDS_VERIFIED"},
+    {"id": "synthetic-log-trust-identity-read-once", "expected": "BOTH_CHECKPOINTS_USE_ONE_POLICY_IDENTITY"},
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
     {"id": "synthetic-log-raw-proof-artifact", "expected": "FIXED_FIELD_ORDER_AND_EXACT_BYTES_RESTORED"},
     {"id": "synthetic-log-restored-byte-isolation", "expected": "FIELDS_AND_RESTORES_HAVE_INDEPENDENT_EXACT_BACKING"},

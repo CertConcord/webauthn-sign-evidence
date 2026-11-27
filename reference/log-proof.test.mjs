@@ -204,6 +204,42 @@ test('a separately configured nonrecommended signed-note key ID also verifies', 
   assert.equal(result.leafSha256, vector.leafSha256);
 });
 
+test('both checkpoints use one fixed external log trust identity', () => {
+  const previousCheckpointNoteBytes = decode(vector.alternatePreviousCheckpointBase64);
+  const mixed = policy({previousCheckpointNoteBytes});
+  assert.throws(() => verifySyntheticTiledLogProof(jws, proof(), mixed),
+    /No trusted checkpoint signature/);
+  assert.throws(() => verifySyntheticTiledLogProof(jws, proof(),
+    policy({keyIdHex: vector.alternateKeyIdHex,
+      previousCheckpointNoteBytes})), /No trusted checkpoint signature/);
+
+  let keyIdReads = 0;
+  Object.defineProperty(mixed, 'keyIdHex', {get() {
+    return ++keyIdReads <= 3 ? policyVector.keyIdHex : vector.alternateKeyIdHex;
+  }});
+  assert.throws(() => verifySyntheticTiledLogProof(jws, proof(), mixed),
+    /No trusted checkpoint signature/);
+  assert.equal(keyIdReads, 1);
+
+  const stable = policy();
+  const reads = {};
+  for (const name of ['origin', 'keyName', 'keyIdHex', 'publicKeyRawHex',
+    'previousCheckpointNoteBytes']) {
+    const value = stable[name];
+    reads[name] = 0;
+    Object.defineProperty(stable, name, {get() {
+      reads[name] += 1;
+      return value;
+    }});
+  }
+  assert.equal(verifySyntheticTiledLogProof(jws, proof(), stable).currentSize,
+    vector.currentSize);
+  assert.deepEqual(reads, {
+    origin: 1, keyName: 1, keyIdHex: 1, publicKeyRawHex: 1,
+    previousCheckpointNoteBytes: 1,
+  });
+});
+
 test('only a separately accepted old checkpoint can establish append-only continuity', () => {
   const inconsistent = decode(vector.inconsistentPreviousCheckpointBase64);
   assert.throws(() => verifySyntheticTiledLogProof(jws, proof(),
