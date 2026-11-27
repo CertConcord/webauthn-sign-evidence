@@ -2,6 +2,20 @@
   "scope": "synthetic model of pinned Yubico sign-extension-v6 and open W3C PR 2078; no WebAuthn or PSCP runtime",
   "supportCases": [
     {
+      "id": "single-parent-list-cddl-shape",
+      "supportList": [[-7, -8]],
+      "expectedParentAlgorithms": [-7, -8],
+      "expectedChildAlgorithms": [-7, -8],
+      "expectedPairs": [[-8, -8], [-8, -7], [-7, -8], [-7, -7]]
+    },
+    {
+      "id": "explicit-equal-child-list",
+      "supportList": [[-7, -8], [-7, -8]],
+      "expectedParentAlgorithms": [-7, -8],
+      "expectedChildAlgorithms": [-7, -8],
+      "expectedPairs": [[-8, -8], [-8, -7], [-7, -8], [-7, -7]]
+    },
+    {
       "id": "sparse-exclusion",
       "supportList": [[-7, -8], [-9, -300], false, 0, 0],
       "expectedPairs": [[-8, -300], [-8, -9], [-7, -300]]
