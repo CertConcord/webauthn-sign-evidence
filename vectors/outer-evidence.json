@@ -1,0 +1,20 @@
+{
+  "scope": "Synthetic outer byte-preservation and first-imprint coverage only; later log artifact is opaque and unverified.",
+  "format": "synthetic-outer-evidence-byte-record-v1",
+  "compactJwsSha256": "8fcf9a9ea5f191b5463d43c2c223f86cf96341c62b5c14545045a6d52aec2bf7",
+  "timestampRequestDerSha256": "314c6ef0ceca23a70a20cf6d336ad689b971e1b53e3fe2e354cee8954f949593",
+  "changedRequestDerSha256": "2eca892f4ebfb3714ba95a159f8e922f4f7d0b6158cd47ef445645216fdf325d",
+  "timestampResponseDerSha256": "3826957e52deb2b3675f4e8eb0d04199c60c353ed65fdfa61ac2f17118b53ae3",
+  "changedResponseDerSha256": "0fc747b790f62593abfe736635ee7f113ac2dddae14cae927824c2bbfaf9004e",
+  "reserializedCompactJwsSha256": "6915c69e589e69141dbafb315a15b4a028dd6d7a4141c1a44feadc6d337feb22",
+  "unverifiedLogArtifactHex": "00ff4c6f672d61727469666163742d76310a",
+  "unverifiedLogArtifactSha256": "74a921f8f2186d03c5229820bc64f8e25fef3fcb1e8cc7dc1c0ee7017a23ecad",
+  "changedUnverifiedLogArtifactHex": "00ff4c6f672d61727469666163742d76310b",
+  "changedUnverifiedLogArtifactSha256": "6bbb94c1ff811fdb7b8e7db07b8f4195c9ee657b6bd292f663cc72cc136d3356",
+  "testVerificationEpochSeconds": 1795744800,
+  "claims": {
+    "timestampTrustEstablished": false,
+    "logProofValidated": false,
+    "laterTimestampTargetSelected": false
+  }
+}
