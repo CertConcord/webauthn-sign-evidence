@@ -1,0 +1,68 @@
+{
+  "scope": "synthetic model of pinned Yubico sign-extension-v6 and open W3C PR 2078; no WebAuthn or PSCP runtime",
+  "supportCases": [
+    {
+      "id": "sparse-exclusion",
+      "supportList": [[-7, -8], [-9, -300], false, 0, 0],
+      "expectedPairs": [[-8, -300], [-8, -9], [-7, -300]]
+    },
+    {
+      "id": "sparse-inclusion",
+      "supportList": [[-7, -8], [-9, -300], true, 0, 1],
+      "expectedPairs": [[-7, -300]]
+    },
+    {
+      "id": "child-list-omitted",
+      "supportList": [[-7, -8], true, 0, 1],
+      "expectedPairs": [[-7, -8]]
+    },
+    {
+      "id": "matrix-range-indices",
+      "supportList": [[-7, -8], [-9, -300], true, 0, -1, 0, -1],
+      "expectedPairs": [[-8, -300], [-8, -9], [-7, -300], [-7, -9]]
+    }
+  ],
+  "selectionCases": [
+    {
+      "id": "pair-unsupported",
+      "supportList": [[-7, -8], [-9, -300], true, 1, 0],
+      "parentAlgorithm": -7,
+      "candidates": [-9],
+      "expected": {"error": 3}
+    },
+    {
+      "id": "later-candidate",
+      "supportList": [[-7, -8], [-9, -300], true, 0, 1],
+      "parentAlgorithm": -7,
+      "candidates": [-9, -300],
+      "expected": {"chosenAlgorithm": -300}
+    },
+    {
+      "id": "algorithm-unsupported",
+      "supportList": [[-7, -8], [-9, -300], true, 0, 1],
+      "parentAlgorithm": -7,
+      "candidates": [-99999],
+      "expected": {"error": 2}
+    }
+  ],
+  "childAttestationCases": [
+    {
+      "id": "child-self-attestation",
+      "presented": {"format": "packed", "trustedPackedX5c": false, "selfAttested": true},
+      "v6ProducerAction": "MUST_USE_NONE_INSTEAD",
+      "expectedPscpFormatGate": false
+    },
+    {
+      "id": "child-none-fallback",
+      "presented": {"format": "none", "trustedPackedX5c": false, "selfAttested": false},
+      "v6ProducerAction": "PERMITTED_FALLBACK",
+      "expectedPscpFormatGate": false
+    },
+    {
+      "id": "trusted-packed-child",
+      "presented": {"format": "packed", "trustedPackedX5c": true, "selfAttested": false},
+      "v6ProducerAction": "NON_SELF_ATTESTATION_POSSIBLE",
+      "expectedPscpFormatGate": true
+    }
+  ]
+}
