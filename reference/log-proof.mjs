@@ -217,6 +217,8 @@ export function restoreSyntheticLogProofArtifact(artifactBytes) {
 }
 
 // Offline one-partial-tile verification only. Trust comes solely from policy.
+// The caller must validate policy.origin against C2SP Checkpoints v1.1.0 origin
+// syntax before this call; this sample checks only its exact signed equality.
 export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
   if (proof === null || typeof proof !== 'object' ||
       policy === null || typeof policy !== 'object' ||
