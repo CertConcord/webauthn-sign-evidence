@@ -35,10 +35,12 @@ export function inspectSyntheticOperation(record, requiredPolicy, verifierFacts 
     ['requireUserVerification', 'userVerificationVerified'],
     ['requireAssociatedWebAuthnResult', 'associatedWebAuthnResultVerified'],
   ]) {
-    if (!Object.hasOwn(requiredPolicy, required) ||
-        typeof requiredPolicy[required] !== 'boolean')
+    if (!Object.hasOwn(requiredPolicy, required))
       throw new TypeError(`Verifier policy requires boolean ${required}`);
-    if (requiredPolicy[required] && verifierFacts[fact] !== true)
+    const needed = requiredPolicy[required];
+    if (typeof needed !== 'boolean')
+      throw new TypeError(`Verifier policy requires boolean ${required}`);
+    if (needed && verifierFacts[fact] !== true)
       unmetEvidence.push(fact);
   }
   return {signatureMathValid, policySatisfied: unmetEvidence.length === 0,

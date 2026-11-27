@@ -10,6 +10,7 @@
     {"id": "challenge-is-not-tbs", "expected": "INVALID"},
     {"id": "signature-does-not-repair-missing-policy-evidence", "expected": "POLICY_UNSATISFIED"},
     {"id": "recorded-policy-downgrade", "expected": "POLICY_UNSATISFIED"},
+    {"id": "verifier-policy-value-read-once", "expected": "REQUIRED_FINDING_CANNOT_DISAPPEAR_BETWEEN_READS"},
     {"id": "optional-jws-exact-complete-byte-imprint", "expected": "IMPRINT_MATCH"},
     {"id": "optional-jws-rfc3161-request-imprint", "expected": "COMPLETE_BYTE_IMPRINT_IN_REQUEST"},
     {"id": "optional-jws-signature-byte-change", "expected": "SIGNATURE_AND_IMPRINT_MISMATCH"},
