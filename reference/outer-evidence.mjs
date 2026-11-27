@@ -5,11 +5,14 @@ const keys = ['format', 'compactJwsBase64', 'timestampRequestDerBase64',
   'timestampResponseDerBase64', 'unverifiedLogArtifactBase64'];
 const strictUtf8 = new TextDecoder('utf-8', {fatal: true});
 const sha256 = value => createHash('sha256').update(value).digest('hex');
+const jsonString = /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"/y;
 
 function copyBytes(value, name) {
   if (!(value instanceof Uint8Array) || value.length === 0)
     throw new TypeError(`${name} must be nonempty bytes`);
-  return Buffer.from(value);
+  const isolated = Buffer.allocUnsafeSlow(value.length);
+  isolated.set(value);
+  return isolated;
 }
 
 function decodeBase64(value, name, optional = false) {
@@ -23,16 +26,60 @@ function decodeBase64(value, name, optional = false) {
   return decoded;
 }
 
+// Parse the restricted outer shape before JSON.parse can discard duplicate names.
+function assertUniqueOuterFields(raw) {
+  let index = 0;
+  const seen = new Set();
+  const skipWhitespace = () => {
+    while (raw[index] === ' ' || raw[index] === '\t' ||
+           raw[index] === '\n' || raw[index] === '\r') index++;
+  };
+  const readString = () => {
+    jsonString.lastIndex = index;
+    const match = jsonString.exec(raw);
+    if (match === null) throw new TypeError('Expected JSON string');
+    index = jsonString.lastIndex;
+    return JSON.parse(match[0]);
+  };
+  const expect = character => {
+    if (raw[index] !== character) throw new TypeError('Unexpected outer record syntax');
+    index++;
+  };
+  skipWhitespace();
+  expect('{');
+  skipWhitespace();
+  if (raw[index] !== '}') {
+    while (true) {
+      const name = readString();
+      if (seen.has(name)) throw new TypeError('Duplicate outer record field');
+      seen.add(name);
+      skipWhitespace();
+      expect(':');
+      skipWhitespace();
+      if (raw[index] === '"') readString();
+      else if (raw.startsWith('null', index)) index += 4;
+      else throw new TypeError('Unexpected outer record value');
+      skipWhitespace();
+      if (raw[index] !== ',') break;
+      index++;
+      skipWhitespace();
+    }
+  }
+  expect('}');
+  skipWhitespace();
+  if (index !== raw.length) throw new TypeError('Trailing outer record content');
+}
+
 function record(compactJws, request, response = null, logArtifact = null) {
-  const frozen = Buffer.from(compactJws);
-  const req = Buffer.from(request);
-  const res = response === null ? null : Buffer.from(response);
-  const log = logArtifact === null ? null : Buffer.from(logArtifact);
+  const frozen = copyBytes(compactJws, 'compact JWS');
+  const req = copyBytes(request, 'timestamp request');
+  const res = response === null ? null : copyBytes(response, 'timestamp response');
+  const log = logArtifact === null ? null : copyBytes(logArtifact, 'log artifact');
   return Object.freeze({
-    compactJwsBytes: () => Buffer.from(frozen),
-    timestampRequestDerBytes: () => Buffer.from(req),
-    timestampResponseDerBytes: () => res === null ? null : Buffer.from(res),
-    unverifiedLogArtifactBytes: () => log === null ? null : Buffer.from(log),
+    compactJwsBytes: () => copyBytes(frozen, 'compact JWS'),
+    timestampRequestDerBytes: () => copyBytes(req, 'timestamp request'),
+    timestampResponseDerBytes: () => res === null ? null : copyBytes(res, 'timestamp response'),
+    unverifiedLogArtifactBytes: () => log === null ? null : copyBytes(log, 'log artifact'),
     fingerprints: () => Object.freeze({
       compactJwsSha256: sha256(frozen),
       timestampRequestDerSha256: sha256(req),
@@ -49,13 +96,13 @@ function record(compactJws, request, response = null, logArtifact = null) {
       return record(frozen, req, res, copyBytes(logBytes, 'log artifact'));
     },
     serializeBytes() {
-      return Buffer.from(JSON.stringify({
+      return copyBytes(Buffer.from(JSON.stringify({
         format,
         compactJwsBase64: frozen.toString('base64'),
         timestampRequestDerBase64: req.toString('base64'),
         timestampResponseDerBase64: res === null ? null : res.toString('base64'),
         unverifiedLogArtifactBase64: log === null ? null : log.toString('base64'),
-      }), 'utf8');
+      }), 'utf8'), 'outer record');
     },
   });
 }
@@ -70,7 +117,9 @@ export function restoreSyntheticOuterEvidence(serializedBytes) {
   const source = copyBytes(serializedBytes, 'outer record');
   if (source.subarray(0, 3).equals(Buffer.from('efbbbf', 'hex')))
     throw new TypeError('Outer record UTF-8 BOM is not accepted');
-  const value = JSON.parse(strictUtf8.decode(source));
+  const raw = strictUtf8.decode(source);
+  assertUniqueOuterFields(raw);
+  const value = JSON.parse(raw);
   if (value === null || typeof value !== 'object' || Array.isArray(value) ||
       JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...keys].sort()) ||
       value.format !== format)

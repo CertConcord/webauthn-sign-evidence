@@ -6,7 +6,7 @@ This repository studies the evidence needed when an application uses the **propo
 
 The synthetic response tests also isolate the TSA certificate identifier from the CMS signature by substituting a same-key test certificate. A fixed test verification epoch keeps the certificate replay reproducible; it does not confer current trust.
 
-A [synthetic outer byte record](vectors/outer-evidence.json) retains the frozen JWS, original request DER, response DER and a later opaque log artifact in separate fields. Its tests distinguish storage and first-imprint coverage from response validation and log-proof validation. This record does not select RFC 5544, an archive profile, or a transparency-log protocol.
+A [synthetic outer byte record](vectors/outer-evidence.json) retains the frozen JWS, original request DER, response DER and a later opaque log artifact in separate fields. Restore rejects duplicate decoded JSON field names, and retained and returned bytes use independent backing storage. Its tests distinguish storage and first-imprint coverage from response validation and log-proof validation. This record does not select RFC 5544, an archive profile, or a transparency-log protocol.
 
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 

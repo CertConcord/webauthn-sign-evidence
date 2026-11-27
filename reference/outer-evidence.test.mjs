@@ -191,6 +191,45 @@ test('retained bytes are copied and evidence order is explicit', () => {
   assert.throws(() => withLog.withUnverifiedLogArtifact(logArtifact), /already retained/);
 });
 
+test('returned byte fields have independent backing storage', () => {
+  const copiedArtifact = withLog.compactJwsBytes();
+  const copiedRequest = withLog.timestampRequestDerBytes();
+  const copiedResponse = withLog.timestampResponseDerBytes();
+  const copiedLog = withLog.unverifiedLogArtifactBytes();
+  const copies = [copiedArtifact, copiedRequest, copiedResponse, copiedLog];
+  for (const copy of copies) {
+    assert.equal(copy.byteOffset, 0);
+    assert.equal(copy.buffer.byteLength, copy.length);
+  }
+  assert.equal(new Set(copies.map(copy => copy.buffer)).size, copies.length);
+  const before = withLog.fingerprints();
+  for (const copy of copies) copy[0] ^= 1;
+  assert.deepEqual(withLog.fingerprints(), before);
+  const serialized = withLog.serializeBytes();
+  const serializedAgain = withLog.serializeBytes();
+  assert.equal(serialized.byteOffset, 0);
+  assert.equal(serialized.buffer.byteLength, serialized.length);
+  assert.notStrictEqual(serialized.buffer, serializedAgain.buffer);
+  const beforeSerializationEdit = Buffer.from(serializedAgain);
+  serialized[0] ^= 1;
+  assert.deepEqual(withLog.serializeBytes(), beforeSerializationEdit);
+});
+
+test('duplicate decoded JSON member names are rejected in either order', () => {
+  const original = withLog.serializeBytes().toString('utf8');
+  const replacement = Buffer.from('changed frozen bytes').toString('base64');
+  const alias = String.raw`"\u0063ompactJwsBase64"`;
+  const originalField = `"compactJwsBase64":${JSON.stringify(artifact.toString('base64'))}`;
+  const replacementField = `${alias}:${JSON.stringify(replacement)}`;
+  for (const duplicate of [
+    original.replace(originalField, `${originalField},${replacementField}`),
+    original.replace(originalField, `${replacementField},${originalField}`),
+  ]) {
+    assert.throws(() => restoreSyntheticOuterEvidence(Buffer.from(duplicate, 'utf8')),
+      /Duplicate outer record field/);
+  }
+});
+
 test('malformed outer encoding does not silently alter retained bytes', () => {
   const original = JSON.parse(withLog.serializeBytes().toString('utf8'));
   for (const changed of [
