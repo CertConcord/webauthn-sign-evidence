@@ -7,7 +7,7 @@ export function prepareSyntheticCompactJws(protectedHeaderBytes, payloadBytes) {
   const header = Buffer.from(protectedHeaderBytes);
   const payload = Buffer.from(payloadBytes);
   const headerText = strictUtf8.decode(header);
-  if (!/^\{\s*"alg"\s*:\s*"EdDSA"\s*\}$/.test(headerText))
+  if (!/^\{[\x20\t\r\n]*"alg"[\x20\t\r\n]*:[\x20\t\r\n]*"EdDSA"[\x20\t\r\n]*\}$/.test(headerText))
     throw new TypeError('This synthetic option requires a protected EdDSA header');
   const signingInput = Buffer.from(
     `${header.toString('base64url')}.${payload.toString('base64url')}`, 'ascii');

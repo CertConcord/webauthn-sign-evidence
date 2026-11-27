@@ -115,6 +115,29 @@ test('reserializing equivalent header requires a new signature and changes times
   assert.notEqual(reserialized.sha256Imprint(), completed.sha256Imprint());
 });
 
+test('JSON whitespace retains its exact signed header bytes', () => {
+  const validHeader = bytes(vector.jsonWhitespaceHeaderUtf8Hex);
+  assert.deepEqual(JSON.parse(validHeader.toString('utf8')), JSON.parse(header.toString('utf8')));
+  const option = prepareSyntheticCompactJws(validHeader, payload);
+  assert.equal(option.toBeSignedBytes().toString('ascii'), vector.jsonWhitespaceSigningInputAscii);
+  const validSignature = sign(null, option.toBeSignedBytes(), privateKey);
+  assert.equal(validSignature.toString('hex'), vector.jsonWhitespaceSignatureHex);
+  const artifact = option.complete(validSignature, publicKeyDer);
+  assert.equal(artifact.serializedBytes().toString('ascii'), vector.jsonWhitespaceCompactAscii);
+  assert.equal(artifact.sha256Imprint(), vector.jsonWhitespaceCompactSha256);
+  assert.notEqual(artifact.sha256Imprint(), completed.sha256Imprint());
+});
+
+test('non-JSON whitespace cannot pass the protected header check', () => {
+  for (const invalidHex of [vector.formFeedHeaderUtf8Hex,
+                            vector.nonBreakingSpaceHeaderUtf8Hex]) {
+    const invalidHeader = bytes(invalidHex);
+    assert.throws(() => JSON.parse(invalidHeader.toString('utf8')), SyntaxError);
+    assert.throws(() => prepareSyntheticCompactJws(invalidHeader, payload),
+      /requires a protected EdDSA header/);
+  }
+});
+
 test('changed payload and malformed or unselected header cannot reuse the signature', () => {
   const changedPayload = Buffer.from(payload);
   changedPayload[0] ^= 1;

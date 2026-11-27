@@ -14,6 +14,8 @@
     {"id": "optional-jws-rfc3161-request-imprint", "expected": "COMPLETE_BYTE_IMPRINT_IN_REQUEST"},
     {"id": "optional-jws-signature-byte-change", "expected": "SIGNATURE_AND_IMPRINT_MISMATCH"},
     {"id": "optional-jws-reserialized-header-and-resigned", "expected": "VALID_SIGNATURE_DIFFERENT_IMPRINT"},
+    {"id": "optional-jws-json-whitespace-retains-original-bytes", "expected": "VALID_SIGNATURE_DIFFERENT_IMPRINT"},
+    {"id": "optional-jws-non-json-whitespace", "expected": "INVALID_HEADER"},
     {"id": "optional-jws-byte-restoration", "expected": "ORIGINAL_IMPRINT_RECOVERED"},
     {"id": "optional-jws-later-outer-proof", "expected": "ORIGINAL_IMPRINT_UNCHANGED"}
   ]
