@@ -99,6 +99,8 @@ function signedCheckpoint(rawBytes, trust) {
   const source = bytes(rawBytes, 'checkpoint');
   if (source.length === 0 || source.length > 131072)
     throw new TypeError('Checkpoint is empty or outside the synthetic size bound');
+  if (source.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])))
+    throw new TypeError('Signed checkpoint BOM is not accepted');
   const raw = utf8.decode(source);
   if (/[\x00-\x09\x0b-\x1f]/.test(raw))
     throw new TypeError('Checkpoint contains a forbidden control character');
@@ -106,6 +108,11 @@ function signedCheckpoint(rawBytes, trust) {
   if (split < 0 || !raw.endsWith('\n'))
     throw new TypeError('Malformed signed note');
   const noteText = raw.slice(0, split + 1);
+  const byteSplit = source.lastIndexOf(Buffer.from('\n\n', 'ascii'));
+  if (byteSplit < 0) throw new TypeError('Malformed signed note bytes');
+  const noteTextBytes = source.subarray(0, byteSplit + 1);
+  if (utf8.decode(noteTextBytes) !== noteText)
+    throw new TypeError('Signed note text differs from original bytes');
   const signatures = raw.slice(split + 2, -1).split('\n');
   if (signatures.length < 1 || signatures.length > 16)
     throw new TypeError('Unexpected number of note signatures');
@@ -129,14 +136,19 @@ function signedCheckpoint(rawBytes, trust) {
   const key = createPublicKey({key: Buffer.concat([spkiPrefix, publicKey]),
     format: 'der', type: 'spki'});
   let matched = false;
+  const seenSignatures = new Set();
   for (const line of signatures) {
     const match = /^— ([^\s+]+) ([A-Za-z0-9+/]+={0,2})$/.exec(line);
     if (!match) throw new TypeError('Malformed signed-note signature line');
     const signature = canonicalBase64(match[2], 'note signature');
     if (signature.length < 4) throw new TypeError('Short note signature');
+    const identity = JSON.stringify([match[1], signature.subarray(0, 4).toString('hex')]);
+    if (seenSignatures.has(identity))
+      throw new TypeError('Duplicate checkpoint signature identity');
+    seenSignatures.add(identity);
     if (match[1] !== trust.keyName || !signature.subarray(0, 4).equals(keyId))
       continue;
-    if (signature.length !== 68 || !verify(null, Buffer.from(noteText, 'utf8'),
+    if (signature.length !== 68 || !verify(null, noteTextBytes,
       key, signature.subarray(4)))
       throw new TypeError('Invalid trusted checkpoint signature');
     matched = true;
@@ -186,7 +198,7 @@ export function restoreSyntheticLogProofArtifact(artifactBytes) {
   }
   if (value === null || typeof value !== 'object' || Array.isArray(value) ||
       JSON.stringify(value) !== raw ||
-      JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...artifactKeys].sort()) ||
+      JSON.stringify(Object.keys(value)) !== JSON.stringify(artifactKeys) ||
       value.format !== artifactFormat ||
       !Number.isSafeInteger(value.entryIndex) || value.entryIndex < 0 ||
       !Array.isArray(value.inclusionPathHex) ||
@@ -211,15 +223,15 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
       typeof policy.origin !== 'string' || typeof policy.keyName !== 'string')
     throw new TypeError('Proof and independent log policy are required');
   const expectedEntry = syntheticJwsLogEntry(jwsBytes);
+  const index = proof.entryIndex;
   const current = signedCheckpoint(proof.checkpointNoteBytes, policy);
   const previous = signedCheckpoint(policy.previousCheckpointNoteBytes, policy);
   if (!(previous.size < current.size))
     throw new TypeError('Previous checkpoint must precede current checkpoint');
-  if (!Number.isSafeInteger(proof.entryIndex) || proof.entryIndex < 0 ||
-      proof.entryIndex >= current.size)
+  if (!Number.isSafeInteger(index) || index < 0 || index >= current.size)
     throw new TypeError('Log entry index is outside the signed tree');
   const entries = bundleEntries(proof.entryBundleBytes, current.size);
-  if (!entries[proof.entryIndex].equals(expectedEntry))
+  if (!entries[index].equals(expectedEntry))
     throw new TypeError('Logged entry differs from the complete JWS digest entry');
   const tile = bytes(proof.levelZeroTileBytes, 'level-zero tile');
   if (tile.length !== 32 * current.size)
@@ -232,7 +244,7 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
   });
   if (!merkleRoot(hashes).equals(current.root))
     throw new TypeError('Tile does not reconstruct signed checkpoint root');
-  if (!auditRoot(hashes[proof.entryIndex], proof.entryIndex, current.size,
+  if (!auditRoot(hashes[index], index, current.size,
     proof.inclusionPathHex).equals(current.root))
     throw new TypeError('Inclusion path does not reach signed checkpoint root');
   const consistency = consistencyRoots(previous.root, previous.size,
@@ -242,10 +254,10 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
     throw new TypeError('Checkpoint consistency proof failed');
   return Object.freeze({
     entrySha256: sha256(expectedEntry).toString('hex'),
-    leafSha256: hashes[proof.entryIndex].toString('hex'),
+    leafSha256: hashes[index].toString('hex'),
     previousSize: previous.size,
     currentSize: current.size,
-    index: proof.entryIndex,
+    index,
     previousCheckpointSha256: previous.noteSha256,
     checkpointSha256: current.noteSha256,
   });

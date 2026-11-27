@@ -147,6 +147,9 @@ test('inclusion path, tile and bundle framing are checked independently', () => 
 
 test('checkpoint origin, root, signature and self-supplied key cannot set trust', () => {
   const original = decode(vector.proof.checkpointNoteBase64);
+  assert.throws(() => verifySyntheticTiledLogProof(jws,
+    proof({checkpointNoteBytes: Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]),
+      original])}), policy()), /BOM/);
   const changedOrigin = Buffer.from(original.toString('utf8').replace(
     policyVector.origin, 'example.invalid/forged-log'), 'utf8');
   assert.throws(() => verifySyntheticTiledLogProof(jws,
@@ -170,6 +173,12 @@ test('checkpoint origin, root, signature and self-supplied key cannot set trust'
     /No trusted checkpoint signature/);
   assert.throws(() => verifySyntheticTiledLogProof(jws, proof(),
     policy({keyIdHex: 'deadbeef'})), /No trusted checkpoint signature/);
+  const signatureLine = original.toString('utf8').split('\n').at(-2);
+  const duplicateIdentity = Buffer.from(original.toString('utf8') +
+    signatureLine + '\n', 'utf8');
+  assert.throws(() => verifySyntheticTiledLogProof(jws,
+    proof({checkpointNoteBytes: duplicateIdentity}), policy()),
+    /Duplicate checkpoint signature identity/);
 });
 
 test('a separately configured nonrecommended signed-note key ID also verifies', () => {
@@ -205,8 +214,29 @@ test('raw log artifact restores the original proof without JSON field collapse',
     /Noncanonical/);
   assert.throws(() => restoreSyntheticLogProofArtifact(
     Buffer.from(JSON.stringify(JSON.parse(raw), null, 2), 'utf8')), /Noncanonical/);
+  const parsed = JSON.parse(raw);
+  const reordered = {entryIndex: parsed.entryIndex, format: parsed.format,
+    checkpointNoteBase64: parsed.checkpointNoteBase64,
+    entryBundleBase64: parsed.entryBundleBase64,
+    levelZeroTileBase64: parsed.levelZeroTileBase64,
+    inclusionPathHex: parsed.inclusionPathHex,
+    consistencyPathHex: parsed.consistencyPathHex};
+  assert.throws(() => restoreSyntheticLogProofArtifact(
+    Buffer.from(JSON.stringify(reordered), 'utf8')), /Noncanonical/);
   assert.throws(() => restoreSyntheticLogProofArtifact(
     Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), proofArtifact])), /Malformed/);
+});
+
+test('entry index is frozen once before bundle, path and result checks', () => {
+  const withGetter = proof();
+  let reads = 0;
+  Object.defineProperty(withGetter, 'entryIndex', {get() {
+    reads++;
+    return reads === 1 ? vector.entryIndex : 1;
+  }});
+  assert.equal(verifySyntheticTiledLogProof(jws, withGetter, policy()).index,
+    vector.entryIndex);
+  assert.equal(reads, 1);
 });
 
 test('verified synthetic log bytes can be retained outside JWS before a new second target', () => {
