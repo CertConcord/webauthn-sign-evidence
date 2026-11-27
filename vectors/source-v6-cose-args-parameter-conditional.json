@@ -1,0 +1,230 @@
+{
+  "scope": "comparison-only conditional errors 5 through 8 after external key-handle and chosen-algorithm findings; no nested CBOR decoder or signature",
+  "sources": {
+    "yubicoV6": "7dcd66cb9a4a75c9f2a654ba90cfdbcf8e22e24f",
+    "w3cPr2078": "f2a5c86f6a093964d1cf471abadc1ab6ee4bc90d",
+    "wg02Sha256": "727d93c73fc67bfdb1de428ac3d6425521019459a8053982b5b3d6ff2c18854b"
+  },
+  "trustedChosenAlg": -303,
+  "algorithmNumberCaveat": "WG -02 uses -303 only as a requested example; the assignment remains TBD",
+  "policyCaveat": "The WG table marks context -1 Required, while its prose permits an empty default; two externally selected policies preserve both interpretations",
+  "cases": [
+    {
+      "id": "omitted-args-competing-interpretations",
+      "outerHex": "a202400643616263",
+      "outerSha256": "2933f31457e5891881ae5c84f20e0676e4340d89365804790fffc9d60280cbce",
+      "argsContentHex": null,
+      "argsContentSha256": null,
+      "decoderFinding": {
+        "kind": "omitted"
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_7"
+    },
+    {
+      "id": "omitted-args-competing-interpretations-empty-default-interpretation",
+      "outerHex": "a202400643616263",
+      "outerSha256": "2933f31457e5891881ae5c84f20e0676e4340d89365804790fffc9d60280cbce",
+      "argsContentHex": null,
+      "argsContentSha256": null,
+      "decoderFinding": {
+        "kind": "omitted"
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "ARGS_PARAMETER_STAGE_PASSED"
+    },
+    {
+      "id": "invalid-args-before-alg-check",
+      "outerHex": "a3024006436162630741ff",
+      "outerSha256": "bb3a1503b1cb423744e3f27a2e7b2a9a9e376f0156a34a3bb20f554c47755a94",
+      "argsContentHex": "ff",
+      "argsContentSha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+      "decoderFinding": {
+        "kind": "invalid"
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_5"
+    },
+    {
+      "id": "different-alg-before-required-check",
+      "outerHex": "a3024006436162630743a10326",
+      "outerSha256": "08eb252ae703575732c5cdb022d5a95612acb4f16ecd0f36c92c589a4f3955a2",
+      "argsContentHex": "a10326",
+      "argsContentSha256": "77491e976b1e3decc4e5b108e63f9d837de71b04c25286d401faff4581bfd541",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -7,
+        "additionalParameterLabels": []
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_6"
+    },
+    {
+      "id": "missing-context",
+      "outerHex": "a3024006436162630745a10339012e",
+      "outerSha256": "b5c80d0fd9cd12a8404af33e2815860e008159cdee0c5fa32f0a36213ff25359",
+      "argsContentHex": "a10339012e",
+      "argsContentSha256": "c5b7cac4c08969f14305bbbeccb299ce7182243a7d2659cad6800dd0e88e9712",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -303,
+        "additionalParameterLabels": []
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_7"
+    },
+    {
+      "id": "missing-context-empty-default-interpretation",
+      "outerHex": "a3024006436162630745a10339012e",
+      "outerSha256": "b5c80d0fd9cd12a8404af33e2815860e008159cdee0c5fa32f0a36213ff25359",
+      "argsContentHex": "a10339012e",
+      "argsContentSha256": "c5b7cac4c08969f14305bbbeccb299ce7182243a7d2659cad6800dd0e88e9712",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -303,
+        "additionalParameterLabels": []
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "ARGS_PARAMETER_STAGE_PASSED"
+    },
+    {
+      "id": "missing-context-precedes-unknown",
+      "outerHex": "a3024006436162630747a20339012e0400",
+      "outerSha256": "721b4bf6bac9e6cd163d47b81ab5b3aea756ef537953c22ec53645f521a46198",
+      "argsContentHex": "a20339012e0400",
+      "argsContentSha256": "23e8a6027885420efc276ab2729ced13d1e2c8623f984a65f5c21c348e03d8a1",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -303,
+        "additionalParameterLabels": [
+          4
+        ]
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_7"
+    },
+    {
+      "id": "missing-context-precedes-unknown-empty-default-interpretation",
+      "outerHex": "a3024006436162630747a20339012e0400",
+      "outerSha256": "721b4bf6bac9e6cd163d47b81ab5b3aea756ef537953c22ec53645f521a46198",
+      "argsContentHex": "a20339012e0400",
+      "argsContentSha256": "23e8a6027885420efc276ab2729ced13d1e2c8623f984a65f5c21c348e03d8a1",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -303,
+        "additionalParameterLabels": [
+          4
+        ]
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_8"
+    },
+    {
+      "id": "unknown-after-required-context",
+      "outerHex": "a3024006436162630749a30339012e20400400",
+      "outerSha256": "095747dae771950f2b25cae7ee3b40b0cf057afe0f6936635f432efa73e87d1d",
+      "argsContentHex": "a30339012e20400400",
+      "argsContentSha256": "cf5f6319067e90c58b987c4ed321ecbd50b43dd1fd04c1ce81ee2bf122154d15",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -303,
+        "additionalParameterLabels": [
+          -1,
+          4
+        ]
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "CONDITIONAL_ERROR_8"
+    },
+    {
+      "id": "empty-context-present",
+      "outerHex": "a3024006436162630747a20339012e2040",
+      "outerSha256": "4d1a74d48b7e4ec3e3c01422efd3ac2e43d3e101e5202733a6544d8764468faa",
+      "argsContentHex": "a20339012e2040",
+      "argsContentSha256": "b4c3db15e7c5764ec8766102fe261466727f0c64127e311b5b61f6704bcd3e5d",
+      "decoderFinding": {
+        "kind": "map",
+        "alg": -303,
+        "additionalParameterLabels": [
+          -1
+        ]
+      },
+      "parameterPolicy": {
+        "algorithm": -303,
+        "requiredAdditionalLabels": [
+          -1
+        ],
+        "applicableAdditionalLabels": [
+          -1
+        ]
+      },
+      "expected": "ARGS_PARAMETER_STAGE_PASSED"
+    }
+  ]
+}

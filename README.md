@@ -42,6 +42,8 @@ A [bounded-copy CBOR vector](vectors/source-v6-cbor-precopy.json) pins this synt
 
 The [resizable-view snapshot vector](vectors/source-v6-cbor-shrink-snapshot.json) checks the same three CBOR entry points when an admitted length-tracking ArrayBuffer view changes before its bytes are copied. A seven-byte request and four-byte response must be rejected if shrinking would leave an unwritten zero tail in the private copy. Growth after admission still preserves the original fixed byte range. This protects the sample's exact extracted `tbs` or signature bytes. Callers must keep the input content stable during copying; this check does not detect concurrent writes to shared backing storage.
 
+The [comparison-only args parameter vector](vectors/source-v6-cose-args-parameter-conditional.json) fixes ten raw-byte cases for the pinned proposals' conditional error order 5→6→7→8. A separately supplied decoder result and algorithm policy choose whether HashEdDSA context `-1` must be explicit or may use an empty default; the same missing-context bytes then yield different conditional results. The cited WG `-02` draft presents `-303` only as a requested example value with its assignment listed as `TBD`. This model does not decode nested args, verify the placeholder key handle, sign, or claim real authenticator error behavior.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check
