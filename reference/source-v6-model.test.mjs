@@ -7,9 +7,20 @@ import {chooseDraftChildAttestationFormat, chooseDraftSigningAlgorithm, decodeDr
 const vector = JSON.parse(readFileSync(new URL('../vectors/source-v6-model.json', import.meta.url)));
 
 test('draft support-list indices yield a sorted parent-by-child matrix', () => {
-  for (const item of vector.supportCases)
-    assert.deepEqual(decodeDraftSupportList(item.supportList).pairs,
-      item.expectedPairs, item.id);
+  for (const item of vector.supportCases) {
+    const decoded = decodeDraftSupportList(item.supportList);
+    assert.deepEqual(decoded.pairs, item.expectedPairs, item.id);
+    if (item.expectedParentAlgorithms !== undefined)
+      assert.deepEqual(decoded.parentAlgorithms, item.expectedParentAlgorithms, item.id);
+    if (item.expectedChildAlgorithms !== undefined)
+      assert.deepEqual(decoded.childAlgorithms, item.expectedChildAlgorithms, item.id);
+  }
+  const singleCase = vector.supportCases.find(item => item.id === 'single-parent-list-cddl-shape');
+  const explicitCase = vector.supportCases.find(item => item.id === 'explicit-equal-child-list');
+  assert.ok(singleCase && explicitCase);
+  const single = decodeDraftSupportList(singleCase.supportList);
+  const explicit = decodeDraftSupportList(explicitCase.supportList);
+  assert.deepEqual(single, explicit);
 });
 
 test('candidate order distinguishes pair exclusion, later success and unknown algorithm', () => {

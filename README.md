@@ -18,6 +18,8 @@ The application log-entry label, each returned 39-byte entry and every restored 
 
 An [additive v6/W3C source-model vector](vectors/source-v6-model.json) tests parent/child algorithm support-list positions, the distinct errors for an unsupported pair and an unavailable algorithm, candidate order, and signing-child self-attestation fallback. It compares only the historical Framework PSCP format gate and does not simulate an authenticator, verify attestation or update Framework's selected source.
 
+That vector also records a draft-text ambiguity: the pinned v6 and open W3C PR CDDL permit a one-item support list with only parent algorithms, while nearby prose says the list has at least two items. The pure model follows the CDDL for this synthetic case; this does not establish deployed acceptance.
+
 A [source-exact v6 ML-DSA example](vectors/source-v6-ml-dsa-example.json) exercises the published sparse matrix: eight excluded parent/child pairs out of 36 possible, with error and later-candidate checks. It describes a draft example, not a device capability claim or a selected PQC document profile.
 
 A [synthetic v6 CBOR boundary vector](vectors/source-v6-cbor-boundary.json) connects the draft's inner `kh`/`tbs` request map and `sig` output map to the existing Ed25519 compact JWS example. It verifies the exact `tbs` content bytes, excludes the CBOR byte-string header and full map from the signature input, then hashes the completed JWS. The narrow decoder does not parse WebAuthn, validate a signing key handle or attest an authenticator.

@@ -62,6 +62,7 @@
     {"id": "v6-sparse-parent-child-inclusion", "expected": "SORTED_MATRIX_INCLUDES_ONE_PAIR"},
     {"id": "v6-optional-child-list-and-range-indices", "expected": "INDEX_POSITIONS_DECODED"},
     {"id": "v6-unsupported-parent-child-pair", "expected": "ERROR_3"},
+    {"id": "v6-single-item-support-cddl-prose-ambiguity", "expected": "ONE_PARENT_LIST_ALL_FOUR_PAIRS_WITH_SOURCE_CONFLICT_RECORDED"},
     {"id": "v6-later-compatible-candidate", "expected": "ORDERED_CANDIDATE_SELECTED"},
     {"id": "v6-globally-unsupported-algorithm", "expected": "ERROR_2"},
     {"id": "v6-signing-child-self-attestation", "expected": "PRODUCER_FALLBACK_AND_PSCP_REJECTION"},
