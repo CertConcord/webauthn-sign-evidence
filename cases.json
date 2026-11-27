@@ -62,6 +62,10 @@
     {"id": "v6-globally-unsupported-algorithm", "expected": "ERROR_2"},
     {"id": "v6-signing-child-self-attestation", "expected": "PRODUCER_FALLBACK_AND_PSCP_REJECTION"},
     {"id": "v6-signing-child-none-fallback", "expected": "PSCP_REJECTION"},
-    {"id": "v6-signing-child-trusted-packed", "expected": "FORMAT_GATE_ONLY"}
+    {"id": "v6-signing-child-trusted-packed", "expected": "FORMAT_GATE_ONLY"},
+    {"id": "v6-ml-dsa-source-example-sparse-matrix", "expected": "EIGHT_OF_THIRTY_SIX_PAIRS_EXCLUDED"},
+    {"id": "v6-ml-dsa-source-example-pair-failure", "expected": "ERROR_3"},
+    {"id": "v6-ml-dsa-source-example-later-candidate", "expected": "CLASSICAL_CHILD_CHOSEN"},
+    {"id": "v6-ml-dsa-source-example-unknown-algorithm", "expected": "ERROR_2"}
   ]
 }

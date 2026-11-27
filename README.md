@@ -14,6 +14,8 @@ An [offline synthetic log vector](vectors/log-proof.json) explores a separate ap
 
 An [additive v6/W3C source-model vector](vectors/source-v6-model.json) tests parent/child algorithm support-list positions, the distinct errors for an unsupported pair and an unavailable algorithm, candidate order, and signing-child self-attestation fallback. It compares only the historical Framework PSCP format gate and does not simulate an authenticator, verify attestation or update Framework's selected source.
 
+A [source-exact v6 ML-DSA example](vectors/source-v6-ml-dsa-example.json) exercises the published sparse matrix: eight excluded parent/child pairs out of 36 possible, with error and later-candidate checks. It describes a draft example, not a device capability claim or a selected PQC document profile.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check
