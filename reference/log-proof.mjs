@@ -151,8 +151,8 @@ function bundleEntries(bundleBytes, count) {
     if (source.length - offset < 2) throw new TypeError('Truncated entry length');
     const length = source.readUInt16BE(offset);
     offset += 2;
-    if (length === 0 || length > source.length - offset)
-      throw new TypeError('Truncated or empty log entry');
+    if (length > source.length - offset)
+      throw new TypeError('Truncated log entry');
     entries.push(source.subarray(offset, offset + length));
     offset += length;
   }

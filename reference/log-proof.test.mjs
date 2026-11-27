@@ -107,6 +107,7 @@ test('bundle and tile expose the exact entry at its signed index', () => {
     offset += length;
   }
   assert.equal(entries.length, vector.currentSize);
+  assert.equal(entries[0].length, 0);
   assert.deepEqual(entries[vector.entryIndex], Buffer.from(vector.entryHex, 'hex'));
   assert.equal(sha(Buffer.concat([Buffer.from([0]), entries[vector.entryIndex]])),
     vector.leafSha256);
