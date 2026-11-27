@@ -122,8 +122,10 @@ function signedCheckpoint(rawBytes, trust) {
   const root = canonicalBase64(rootText, 'checkpoint root');
   if (root.length !== 32) throw new TypeError('Checkpoint root must be 32 bytes');
   const publicKey = hex32(trust.publicKeyRawHex, 'trusted log public key');
-  const keyId = sha256(Buffer.concat([Buffer.from(trust.keyName + '\n', 'utf8'),
-    Buffer.from([1]), publicKey])).subarray(0, 4);
+  // Signed Note recommends deriving IDs; it does not require that derivation.
+  if (typeof trust.keyIdHex !== 'string' || !/^[0-9a-f]{8}$/.test(trust.keyIdHex))
+    throw new TypeError('Trusted log key ID must be four lowercase hex bytes');
+  const keyId = Buffer.from(trust.keyIdHex, 'hex');
   const key = createPublicKey({key: Buffer.concat([spkiPrefix, publicKey]),
     format: 'der', type: 'spki'});
   let matched = false;

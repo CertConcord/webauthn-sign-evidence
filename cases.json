@@ -48,6 +48,7 @@
     {"id": "synthetic-log-changed-jws-entry-or-index", "expected": "ENTRY_BINDING_REJECTED"},
     {"id": "synthetic-log-path-tile-or-bundle-mutation", "expected": "MERKLE_OR_FRAMING_REJECTED"},
     {"id": "synthetic-log-note-origin-root-signature-or-key", "expected": "INDEPENDENT_LOG_POLICY_REJECTED"},
+    {"id": "synthetic-log-configured-key-id", "expected": "RECOMMENDED_AND_ALTERNATE_SIGNED_NOTE_IDS_VERIFIED"},
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
     {"id": "synthetic-log-raw-proof-artifact", "expected": "EXACT_BYTES_RESTORED_DUPLICATE_NAMES_REJECTED"},
     {"id": "synthetic-log-new-outer-snapshot", "expected": "FIRST_IMPRINT_STABLE_SECOND_IMPRINT_REBUILT"}

@@ -43,6 +43,7 @@ function policy(overrides = {}) {
   return {
     origin: policyVector.origin,
     keyName: policyVector.keyName,
+    keyIdHex: policyVector.keyIdHex,
     publicKeyRawHex: policyVector.publicKeyRawHex,
     previousCheckpointNoteBytes: decode(policyVector.previousCheckpointBase64),
     ...overrides,
@@ -167,6 +168,17 @@ test('checkpoint origin, root, signature and self-supplied key cannot set trust'
     proof({checkpointNoteBytes: selfSigned,
       selfSuppliedPublicKeyRawHex: vector.selfSuppliedPublicKeyRawHex}), policy()),
     /No trusted checkpoint signature/);
+  assert.throws(() => verifySyntheticTiledLogProof(jws, proof(),
+    policy({keyIdHex: 'deadbeef'})), /No trusted checkpoint signature/);
+});
+
+test('a separately configured nonrecommended signed-note key ID also verifies', () => {
+  const alternate = policy({keyIdHex: vector.alternateKeyIdHex,
+    previousCheckpointNoteBytes: decode(vector.alternatePreviousCheckpointBase64)});
+  const result = verifySyntheticTiledLogProof(jws,
+    proof({checkpointNoteBytes: decode(vector.alternateCurrentCheckpointBase64)}),
+    alternate);
+  assert.equal(result.leafSha256, vector.leafSha256);
 });
 
 test('only a separately accepted old checkpoint can establish append-only continuity', () => {
