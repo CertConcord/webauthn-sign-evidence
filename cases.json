@@ -25,6 +25,7 @@
     {"id": "synthetic-response-invalid-status-token-pair", "expected": "INVALID_RESPONSE"},
     {"id": "synthetic-response-unrelated-test-root", "expected": "TEST_CHAIN_REJECTED"},
     {"id": "synthetic-response-changed-request-nonce", "expected": "NONCE_MISMATCH"},
-    {"id": "synthetic-response-changed-request-policy", "expected": "POLICY_MISMATCH"}
+    {"id": "synthetic-response-changed-request-policy", "expected": "POLICY_MISMATCH"},
+    {"id": "synthetic-response-same-key-certificate-substitution", "expected": "ESS_CERT_ID_MISMATCH"}
   ]
 }

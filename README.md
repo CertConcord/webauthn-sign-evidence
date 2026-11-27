@@ -4,6 +4,8 @@ This repository studies the evidence needed when an application uses the **propo
 
 [Draft](draft.md) defines the evidence questions and boundaries. [Sources](sources.json) records exact source commits and bytes. [Cases](cases.json) and [synthetic vectors](vectors/direct-input.json) test direct signature input bytes, an assertion-shaped boundary and evidence-policy separation. A [conditional compact JWS vector](vectors/optional-jws.json) tests construction order and the exact bytes of one possible RFC 3161 imprint target. [Synthetic response fixtures](vectors/optional-jws-response.json) exercise that byte target with a locally issued test certificate and OpenSSL response verification. They are not an extension-defined or selected timestamp profile. These examples do not implement WebAuthn, verify attestation, produce a PAdES/CAdES/JAdES container, or establish trusted TSA time.
 
+The synthetic response tests also isolate the TSA certificate identifier from the CMS signature by substituting a same-key test certificate. A fixed test verification epoch keeps the certificate replay reproducible; it does not confer current trust.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check
