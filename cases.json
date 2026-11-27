@@ -43,6 +43,16 @@
     {"id": "later-timestamp-changed-log", "expected": "FIRST_MATCH_SECOND_MISMATCH"},
     {"id": "later-timestamp-changed-jws", "expected": "BOTH_MISMATCH"},
     {"id": "later-timestamp-changed-request-or-response", "expected": "SECOND_TRANSACTION_REVALIDATION_REQUIRED"},
-    {"id": "later-timestamp-record-roundtrip", "expected": "EXACT_SNAPSHOT_AND_OWNED_BYTES_PRESERVED"}
+    {"id": "later-timestamp-record-roundtrip", "expected": "EXACT_SNAPSHOT_AND_OWNED_BYTES_PRESERVED"},
+    {"id": "synthetic-log-jws-entry-and-partial-tile", "expected": "TEST_KEY_INCLUSION_AND_CONSISTENCY_VALID"},
+    {"id": "synthetic-log-changed-jws-entry-or-index", "expected": "ENTRY_BINDING_REJECTED"},
+    {"id": "synthetic-log-path-tile-or-bundle-mutation", "expected": "MERKLE_OR_FRAMING_REJECTED"},
+    {"id": "synthetic-log-note-origin-root-signature-or-key", "expected": "INDEPENDENT_LOG_POLICY_REJECTED"},
+    {"id": "synthetic-log-note-raw-text-and-signature-identity", "expected": "BOM_OR_DUPLICATE_SIGNATURE_IDENTITY_REJECTED"},
+    {"id": "synthetic-log-configured-key-id", "expected": "RECOMMENDED_AND_ALTERNATE_SIGNED_NOTE_IDS_VERIFIED"},
+    {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
+    {"id": "synthetic-log-raw-proof-artifact", "expected": "FIXED_FIELD_ORDER_AND_EXACT_BYTES_RESTORED"},
+    {"id": "synthetic-log-entry-index-read-once", "expected": "ONE_INDEX_USED_THROUGH_ALL_CHECKS"},
+    {"id": "synthetic-log-new-outer-snapshot", "expected": "FIRST_IMPRINT_STABLE_SECOND_IMPRINT_REBUILT"}
   ]
 }
