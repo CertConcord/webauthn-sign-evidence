@@ -26,6 +26,12 @@
     {"id": "synthetic-response-unrelated-test-root", "expected": "TEST_CHAIN_REJECTED"},
     {"id": "synthetic-response-changed-request-nonce", "expected": "NONCE_MISMATCH"},
     {"id": "synthetic-response-changed-request-policy", "expected": "POLICY_MISMATCH"},
-    {"id": "synthetic-response-same-key-certificate-substitution", "expected": "ESS_CERT_ID_MISMATCH"}
+    {"id": "synthetic-response-same-key-certificate-substitution", "expected": "ESS_CERT_ID_MISMATCH"},
+    {"id": "outer-record-raw-byte-roundtrip", "expected": "INNER_BYTES_PRESERVED"},
+    {"id": "outer-record-json-reserialization", "expected": "FIRST_IMPRINT_UNCHANGED"},
+    {"id": "outer-record-changed-jws-or-valid-reserialization", "expected": "ORIGINAL_RESPONSE_ARTIFACT_MISMATCH"},
+    {"id": "outer-record-changed-request-imprint", "expected": "REQUEST_TOKEN_MISMATCH"},
+    {"id": "outer-record-changed-response", "expected": "REVALIDATION_REQUIRED"},
+    {"id": "outer-record-changed-opaque-log-bytes", "expected": "FIRST_IMPRINT_UNCHANGED_LOG_UNVERIFIED"}
   ]
 }
