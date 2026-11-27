@@ -11,6 +11,7 @@ const vector = JSON.parse(readFileSync(new URL('../vectors/optional-jws-response
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const fromHex = value => Buffer.from(value, 'hex');
 const fromBase64 = value => Buffer.from(value, 'base64');
+const replayEpoch = String(vector.verificationEpochSeconds);
 
 function runOpenSsl(args) {
   const result = spawnSync('openssl', args, {encoding: 'utf8', timeout: 15_000});
@@ -25,7 +26,8 @@ function verifyResponse({response, request, artifact, root}) {
     const rootPath = join(directory, 'test-root.pem');
     writeFileSync(responsePath, response);
     writeFileSync(rootPath, root);
-    const args = ['ts', '-verify', '-in', responsePath, '-CAfile', rootPath];
+    const args = ['ts', '-verify', '-in', responsePath, '-CAfile', rootPath,
+      '-attime', replayEpoch];
     if (request) {
       const path = join(directory, 'request.der');
       writeFileSync(path, request);
@@ -66,16 +68,20 @@ test('public response fixtures retain the probed bytes and test-only scope', () 
     'tsa-test-imprint-bitflip.tsr': fromBase64(vector.imprintBitflipResponseDerBase64),
     'tsa-test-status-granted-without-token.tsr': fromHex(vector.grantedWithoutTokenDerHex),
     'tsa-test-status-rejection-with-token.tsr': fromBase64(vector.rejectionWithTokenDerBase64),
+    'tsa-test-leaf-same-key-altered.pem': Buffer.from(vector.sameKeyAlternateTestLeafPem, 'ascii'),
+    'tsa-test-esscertid-mismatch.tsr': fromBase64(vector.essCertIdMismatchResponseDerBase64),
   };
   assert.deepEqual(Object.keys(fixtures).sort(), Object.keys(vector.fixtureSha256).sort());
   for (const [name, bytes] of Object.entries(fixtures)) {
     assert.equal(sha256(bytes), vector.fixtureSha256[name], name);
   }
   assert.equal(vector.privateKeyPublished, false);
+  assert.equal(vector.verificationEpochSeconds, 1795744800);
   assert.equal(vector.trustedTimeEstablished, false);
   assert.equal(vector.nonceFreeRequestTimelinessEstablished, false);
   assert.equal(vector.testRootPem.includes('PRIVATE KEY'), false);
   assert.equal(vector.testLeafPem.includes('PRIVATE KEY'), false);
+  assert.equal(vector.sameKeyAlternateTestLeafPem.includes('PRIVATE KEY'), false);
 });
 
 test('the synthetic certificate explicitly carries a critical time-stamping EKU', () => {
@@ -95,6 +101,65 @@ test('complete frozen JWS bytes bind to a signed response under the synthetic ro
   assert.match(byRequest.stdout, /Verification: OK/);
   assert.equal(byArtifact.status, 0, byArtifact.stderr);
   assert.match(byArtifact.stdout, /Verification: OK/);
+});
+
+test('same-key certificate substitution preserves CMS signature but fails ESSCertID', () => {
+  const certificate = pem => {
+    const der = spawnSync('openssl', ['x509', '-outform', 'DER'], {
+      input: pem, timeout: 15_000,
+    });
+    assert.equal(der.status, 0, der.stderr?.toString());
+    return der.stdout;
+  };
+  const certificateText = (pem, ...args) => {
+    const result = spawnSync('openssl', ['x509', '-noout', ...args], {
+      input: pem, encoding: 'utf8', timeout: 15_000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout;
+  };
+  const originalCert = certificate(vector.testLeafPem);
+  const alternateCert = certificate(vector.sameKeyAlternateTestLeafPem);
+  assert.equal(originalCert.length, alternateCert.length);
+  assert.notDeepEqual(originalCert, alternateCert);
+  assert.equal(certificateText(vector.testLeafPem, '-pubkey'),
+    certificateText(vector.sameKeyAlternateTestLeafPem, '-pubkey'));
+  assert.equal(certificateText(vector.testLeafPem, '-issuer', '-serial'),
+    certificateText(vector.sameKeyAlternateTestLeafPem, '-issuer', '-serial'));
+  assert.match(certificateText(vector.sameKeyAlternateTestLeafPem, '-text'),
+    /X509v3 Extended Key Usage: critical\s+Time Stamping/);
+  assert.equal(response.indexOf(originalCert), response.lastIndexOf(originalCert));
+  const alteredResponse = fromBase64(vector.essCertIdMismatchResponseDerBase64);
+  const expectedResponse = Buffer.from(response);
+  alternateCert.copy(expectedResponse, response.indexOf(originalCert));
+  assert.deepEqual(alteredResponse, expectedResponse);
+
+  const directory = mkdtempSync(join(tmpdir(), 'webauthn-ess-test-'));
+  try {
+    const rootPath = join(directory, 'root.pem');
+    const alternatePath = join(directory, 'alternate.pem');
+    const responsePath = join(directory, 'response.der');
+    const tokenPath = join(directory, 'token.der');
+    writeFileSync(rootPath, testRoot);
+    writeFileSync(alternatePath, vector.sameKeyAlternateTestLeafPem);
+    writeFileSync(responsePath, alteredResponse);
+    const chain = runOpenSsl(['verify', '-purpose', 'timestampsign', '-CAfile',
+      rootPath, '-attime', replayEpoch, alternatePath]);
+    assert.equal(chain.status, 0, chain.stderr);
+    const extraction = runOpenSsl(['ts', '-reply', '-in', responsePath,
+      '-token_out', '-out', tokenPath]);
+    assert.equal(extraction.status, 0, extraction.stderr);
+    const cms = runOpenSsl(['cms', '-verify', '-inform', 'DER', '-in', tokenPath,
+      '-CAfile', rootPath, '-purpose', 'any', '-attime', replayEpoch,
+      '-out', join(directory, 'content.der')]);
+    assert.equal(cms.status, 0, cms.stderr);
+    const timestamp = verifyResponse({response: alteredResponse, request, root: testRoot});
+    assert.notEqual(timestamp.status, 0);
+    assert.match(timestamp.stdout, /Verification: FAILED/);
+    assert.match(timestamp.stderr, /ess cert id not found/i);
+  } finally {
+    rmSync(directory, {recursive: true, force: true});
+  }
 });
 
 test('changed signature octet and reserialized, correctly re-signed JWS fail the original imprint', () => {
