@@ -240,6 +240,22 @@ test('both checkpoints use one fixed external log trust identity', () => {
   });
 });
 
+test('proof access cannot replace previously accepted checkpoint bytes', () => {
+  const acceptedPrior = decode(policyVector.previousCheckpointBase64);
+  const replacementPrior = decode(vector.alternatePreviousCheckpointBase64);
+  assert.equal(acceptedPrior.length, replacementPrior.length);
+  const independentPolicy = policy({keyIdHex: vector.alternateKeyIdHex,
+    previousCheckpointNoteBytes: acceptedPrior});
+  const hostileProof = proof();
+  Object.defineProperty(hostileProof, 'checkpointNoteBytes', {get() {
+    replacementPrior.copy(acceptedPrior);
+    return decode(vector.alternateCurrentCheckpointBase64);
+  }});
+  assert.throws(() => verifySyntheticTiledLogProof(jws, hostileProof,
+    independentPolicy), /No trusted checkpoint signature/);
+  assert.deepEqual(acceptedPrior, replacementPrior);
+});
+
 test('only a separately accepted old checkpoint can establish append-only continuity', () => {
   const inconsistent = decode(vector.inconsistentPreviousCheckpointBase64);
   assert.throws(() => verifySyntheticTiledLogProof(jws, proof(),
