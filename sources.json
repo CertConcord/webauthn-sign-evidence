@@ -88,6 +88,13 @@
       "sha256": "b09ffd2ad33dad912f01bf916722d2b7eb439cf5c0f5b4591bb81fcef93a95ec",
       "bytes": 54472,
       "role": "Later comparison only; not selected for member-level args semantics"
+    },
+    {
+      "id": "coseSplitSigningWg02Comparison",
+      "url": "https://www.ietf.org/archive/id/draft-ietf-cose-split-signing-algs-02.txt",
+      "sha256": "727d93c73fc67bfdb1de428ac3d6425521019459a8053982b5b3d6ff2c18854b",
+      "bytes": 55168,
+      "role": "Later comparison only; its COSE_Sign_Args members are not selected for this component"
     }
   ]
 }
