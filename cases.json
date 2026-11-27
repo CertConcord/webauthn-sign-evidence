@@ -47,6 +47,7 @@
     {"id": "later-timestamp-changed-request-or-response", "expected": "SECOND_TRANSACTION_REVALIDATION_REQUIRED"},
     {"id": "later-timestamp-record-roundtrip", "expected": "EXACT_SNAPSHOT_AND_OWNED_BYTES_PRESERVED"},
     {"id": "synthetic-log-jws-entry-and-partial-tile", "expected": "TEST_KEY_INCLUSION_AND_CONSISTENCY_VALID"},
+    {"id": "synthetic-log-entry-independent-backing", "expected": "RETURNED_VIEW_CANNOT_CHANGE_LABEL_OR_PROOF_VERIFICATION"},
     {"id": "synthetic-log-changed-jws-entry-or-index", "expected": "ENTRY_BINDING_REJECTED"},
     {"id": "synthetic-log-path-tile-or-bundle-mutation", "expected": "MERKLE_OR_FRAMING_REJECTED"},
     {"id": "synthetic-log-note-origin-root-signature-or-key", "expected": "INDEPENDENT_LOG_POLICY_REJECTED"},
