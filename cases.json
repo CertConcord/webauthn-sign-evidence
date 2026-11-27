@@ -18,6 +18,8 @@
     {"id": "optional-jws-non-json-whitespace", "expected": "INVALID_HEADER"},
     {"id": "optional-jws-byte-restoration", "expected": "ORIGINAL_IMPRINT_RECOVERED"},
     {"id": "optional-jws-later-outer-proof", "expected": "ORIGINAL_IMPRINT_UNCHANGED"},
+    {"id": "optional-jws-independent-backing", "expected": "RETURNED_VIEWS_CANNOT_CHANGE_FROZEN_JWS_OR_EACH_OTHER"},
+    {"id": "optional-jws-native-byte-admission", "expected": "REAL_SUBVIEWS_ACCEPTED_IMPLICIT_ENCODING_REJECTED"},
     {"id": "synthetic-response-original-request-and-artifact", "expected": "BYTE_BOUND_TEST_SIGNATURE_VALID_TRUST_UNESTABLISHED"},
     {"id": "synthetic-response-changed-signature-byte", "expected": "IMPRINT_MISMATCH"},
     {"id": "synthetic-response-reserialized-resigned-artifact", "expected": "IMPRINT_MISMATCH"},

@@ -81,6 +81,50 @@ test('caller mutation of returned bytes cannot change the completed artifact', (
   assert.equal(completed.sha256Imprint(), vector.compactSha256);
 });
 
+test('retained and returned JWS bytes have exact independent backing stores', () => {
+  const option = prepareSyntheticCompactJws(header, payload);
+  const inputA = option.toBeSignedBytes();
+  const inputB = option.toBeSignedBytes();
+  assert.equal(inputA.buffer.byteLength, inputA.byteLength);
+  assert.equal(inputB.buffer.byteLength, inputB.byteLength);
+  assert.notEqual(inputA.buffer, inputB.buffer);
+  new Uint8Array(inputA.buffer).fill(0);
+  assert.equal(inputB.toString('ascii'), vector.signingInputAscii);
+  assert.equal(option.toBeSignedBytes().toString('ascii'), vector.signingInputAscii);
+
+  const artifact = option.complete(signature, publicKeyDer);
+  const serializedA = artifact.serializedBytes();
+  const serializedB = artifact.serializedBytes();
+  assert.equal(serializedA.buffer.byteLength, serializedA.byteLength);
+  assert.equal(serializedB.buffer.byteLength, serializedB.byteLength);
+  assert.notEqual(serializedA.buffer, serializedB.buffer);
+  new Uint8Array(serializedA.buffer).fill(0);
+  assert.equal(serializedB.toString('ascii'), vector.compactAscii);
+  assert.equal(artifact.serializedBytes().toString('ascii'), vector.compactAscii);
+  assert.equal(artifact.sha256Imprint(), vector.compactSha256);
+});
+
+test('JWS construction accepts genuine byte subviews and rejects implicit encodings', () => {
+  const subview = value => Uint8Array.from([0x7f, ...value, 0x7f])
+    .subarray(1, value.length + 1);
+  const option = prepareSyntheticCompactJws(subview(header), subview(payload));
+  assert.equal(option.toBeSignedBytes().toString('ascii'), vector.signingInputAscii);
+  assert.equal(option.complete(subview(signature), subview(publicKeyDer))
+    .sha256Imprint(), vector.compactSha256);
+  assert.equal(prepareSyntheticCompactJws(header, new Uint8Array(0))
+    .toBeSignedBytes().toString('ascii'), `${header.toString('base64url')}.`);
+  assert.throws(() => prepareSyntheticCompactJws(header.toString('utf8'), payload),
+    /native bytes/);
+  assert.throws(() => prepareSyntheticCompactJws(header, payload.toString('latin1')),
+    /native bytes/);
+  assert.throws(() => option.complete(signature.toString('hex'), publicKeyDer),
+    /native bytes/);
+  assert.throws(() => option.complete(signature, publicKeyDer.toString('hex')),
+    /native bytes/);
+  const forged = Object.setPrototypeOf({}, Uint8Array.prototype);
+  assert.throws(() => prepareSyntheticCompactJws(forged, payload), /native bytes/);
+});
+
 test('single changed signature byte fails verification and imprint; restoration recovers both', () => {
   const original = completed.serializedBytes();
   const altered = Buffer.from(original);
