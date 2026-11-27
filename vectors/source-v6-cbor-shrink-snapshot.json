@@ -1,0 +1,13 @@
+{
+  "format": "synthetic-v6-cbor-resizable-snapshot-v1",
+  "requestMapHex": "a2024101064141",
+  "requestMapSha256": "abd5e2126cab269fb63b7290bd941e08a466319e3f76204e2f8432ff31181010",
+  "requestAfterShrinkHex": "a20241010641",
+  "requestAfterShrinkSha256": "1024ad242ef62108a8cf629106808dc1cacc338b9d72096defd303a50e71a951",
+  "responseMapHex": "a1064141",
+  "responseMapSha256": "44770f9fd332c0c2efcc269dc43dc845d378f78696e243a3be3c6b30b926ba61",
+  "responseAfterShrinkHex": "a10641",
+  "responseAfterShrinkSha256": "81720bbc39163d414481e3634e7a8c060c636442354fc84cba92ae0ad9df5f72",
+  "originalContentHex": "41",
+  "unwrittenTailValueHex": "00"
+}

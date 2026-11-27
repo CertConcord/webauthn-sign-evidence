@@ -7,6 +7,10 @@ import {decodeDraftSupportList} from './source-v6-model.mjs';
 const MAX_SYNTHETIC_MAP_BYTES = 1 + 3 * (1 + 3 + 65535) + 2;
 const nativeByteLength = Object.getOwnPropertyDescriptor(
   Object.getPrototypeOf(Uint8Array.prototype), 'byteLength').get;
+const nativeByteOffset = Object.getOwnPropertyDescriptor(
+  Object.getPrototypeOf(Uint8Array.prototype), 'byteOffset').get;
+const nativeBuffer = Object.getOwnPropertyDescriptor(
+  Object.getPrototypeOf(Uint8Array.prototype), 'buffer').get;
 
 function ownedBytes(value, name) {
   if (!types.isUint8Array(value))
@@ -20,12 +24,19 @@ function snapshotSyntheticMap(value) {
   const length = nativeByteLength.call(value);
   if (length > MAX_SYNTHETIC_MAP_BYTES)
     throw new TypeError('synthetic CBOR map exceeds local limit');
+  // Keep a fixed source extent even if a length-tracking input later resizes.
+  const source = new Uint8Array(nativeBuffer.call(value),
+    nativeByteOffset.call(value), length);
   const snapshot = Buffer.alloc(length);
+  if (nativeByteLength.call(source) !== length)
+    throw new TypeError('synthetic extension map changed during snapshot');
   try {
-    Uint8Array.prototype.set.call(snapshot, value);
+    Uint8Array.prototype.set.call(snapshot, source);
   } catch (cause) {
     throw new TypeError('synthetic extension map changed during snapshot', {cause});
   }
+  if (nativeByteLength.call(source) !== length)
+    throw new TypeError('synthetic extension map changed during snapshot');
   return snapshot;
 }
 
