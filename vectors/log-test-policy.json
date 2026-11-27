@@ -1,0 +1,7 @@
+{
+  "scope": "Public synthetic test-key fixture; real relying parties configure keys and prior checkpoints independently.",
+  "origin": "example.invalid/certconcord-synthetic-log",
+  "keyName": "example.invalid/certconcord-synthetic-log",
+  "publicKeyRawHex": "29aa19b0109c5b6eed0945e6b6d4c66ecb9e5bea1b803e654ceddc81fe1b81d9",
+  "previousCheckpointBase64": "ZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXN5bnRoZXRpYy1sb2cKMwpPNy84WWlIbENaRWpXdnU4OG4vcWlWU2ZUdklCa2wreVlEbDUvYjI0U0JRPQoK4oCUIGV4YW1wbGUuaW52YWxpZC9jZXJ0Y29uY29yZC1zeW50aGV0aWMtbG9nIFdaTzMwZStZR1hpV1FUS05UbWlVck8weVg0V0xJVnJJTEV6OWRrTi9rdlZ1bG9DRUlnMkRyRmlvOEg5Tmh0d1RYK29RRnhmbVBlZSthdHlmSjRKUmJXb2o1d3M9Cg=="
+}
