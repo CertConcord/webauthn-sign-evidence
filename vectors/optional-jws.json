@@ -1,0 +1,17 @@
+{
+  "scope": "Original synthetic Ed25519 application option; no WebAuthn runtime or TSA response",
+  "keySeedLabel": "CertConcord optional compact JWS synthetic vector v1",
+  "protectedHeaderUtf8Hex": "7b22616c67223a224564445341227d",
+  "payloadHex": "00ff43657274436f6e636f7264204a57532076310a",
+  "publicKeySpkiDerHex": "302a300506032b65700321001057ecf0f5fa7b50f7f2d2cb60cf049a53fbc89b7580cbbb5a60218376d00f70",
+  "signingInputAscii": "eyJhbGciOiJFZERTQSJ9.AP9DZXJ0Q29uY29yZCBKV1MgdjEK",
+  "signatureHex": "069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c",
+  "compactAscii": "eyJhbGciOiJFZERTQSJ9.AP9DZXJ0Q29uY29yZCBKV1MgdjEK.BpxLtNUhDnBK_jZIrEZVDrQ_4GEg7B8K1Wi1yols4z17QyamOlQqCVPzwIlK_6E6-hsxLD-nVjyufNoZA7JGDA",
+  "compactSha256": "8fcf9a9ea5f191b5463d43c2c223f86cf96341c62b5c14545045a6d52aec2bf7",
+  "timestampRequestDerHex": "30390201013031300d0609608648016503040201050004208fcf9a9ea5f191b5463d43c2c223f86cf96341c62b5c14545045a6d52aec2bf70101ff",
+  "reserializedHeaderUtf8Hex": "7b22616c67223a20224564445341227d",
+  "reserializedSigningInputAscii": "eyJhbGciOiAiRWREU0EifQ.AP9DZXJ0Q29uY29yZCBKV1MgdjEK",
+  "reserializedSignatureHex": "48dddf5d615c45db1c76ece695e0f2d3b1b451cbcbedd2a75e9f89ba6c799c4cae547f306f5ada126d7ade8987b45c695fc2195607e185fe75741187a99fd80d",
+  "reserializedCompactAscii": "eyJhbGciOiAiRWREU0EifQ.AP9DZXJ0Q29uY29yZCBKV1MgdjEK.SN3fXWFcRdscduzmleDy07G0UcvL7dKnXp-Jumx5nEyuVH8wb1raEm163omHtFxpX8IZVgfhhf51dBGHqZ_YDQ",
+  "reserializedCompactSha256": "6915c69e589e69141dbafb315a15b4a028dd6d7a4141c1a44feadc6d337feb22"
+}

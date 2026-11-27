@@ -9,6 +9,12 @@
     {"id": "assertion-signature-is-not-direct-signature", "expected": "INVALID"},
     {"id": "challenge-is-not-tbs", "expected": "INVALID"},
     {"id": "signature-does-not-repair-missing-policy-evidence", "expected": "POLICY_UNSATISFIED"},
-    {"id": "recorded-policy-downgrade", "expected": "POLICY_UNSATISFIED"}
+    {"id": "recorded-policy-downgrade", "expected": "POLICY_UNSATISFIED"},
+    {"id": "optional-jws-exact-complete-byte-imprint", "expected": "IMPRINT_MATCH"},
+    {"id": "optional-jws-rfc3161-request-imprint", "expected": "COMPLETE_BYTE_IMPRINT_IN_REQUEST"},
+    {"id": "optional-jws-signature-byte-change", "expected": "SIGNATURE_AND_IMPRINT_MISMATCH"},
+    {"id": "optional-jws-reserialized-header-and-resigned", "expected": "VALID_SIGNATURE_DIFFERENT_IMPRINT"},
+    {"id": "optional-jws-byte-restoration", "expected": "ORIGINAL_IMPRINT_RECOVERED"},
+    {"id": "optional-jws-later-outer-proof", "expected": "ORIGINAL_IMPRINT_UNCHANGED"}
   ]
 }
