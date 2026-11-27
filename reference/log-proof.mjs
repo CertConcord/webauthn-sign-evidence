@@ -2,7 +2,8 @@ import {createHash, createPublicKey, verify} from 'node:crypto';
 import {types} from 'node:util';
 
 const utf8 = new TextDecoder('utf-8', {fatal: true});
-const label = Buffer.from('CCWSL1\0', 'ascii');
+const label = Buffer.alloc(7);
+label.write('CCWSL1\0', 'ascii');
 const spkiPrefix = Buffer.from('302a300506032b6570032100', 'hex');
 const artifactFormat = 'synthetic-one-partial-tile-proof-v1';
 const artifactKeys = ['format', 'entryIndex', 'checkpointNoteBase64',
@@ -178,7 +179,7 @@ export function syntheticJwsLogEntry(jwsBytes) {
   const jws = bytes(jwsBytes, 'complete compact JWS');
   if (jws.length === 0 || !jws.every(value => value < 0x80))
     throw new TypeError('Complete compact JWS must be nonempty ASCII bytes');
-  return Buffer.concat([label, sha256(jws)]);
+  return bytes(Buffer.concat([label, sha256(jws)]), 'synthetic log entry');
 }
 
 // This narrow JSON encoding is byte-canonical within the synthetic fixture.

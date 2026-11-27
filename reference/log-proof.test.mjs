@@ -95,6 +95,20 @@ test('exact JWS digest entry binds to a trusted test-key checkpoint and prior tr
   assert.equal(vector.claims.logWitnessOrMonitorEstablished, false);
 });
 
+test('returned log entries cannot change another view or the versioned label', () => {
+  const first = syntheticJwsLogEntry(jws);
+  const second = syntheticJwsLogEntry(jws);
+  assert.equal(first.length, 39);
+  assert.equal(first.buffer.byteLength, first.length);
+  assert.equal(second.buffer.byteLength, second.length);
+  assert.notEqual(first.buffer, second.buffer);
+  new Uint8Array(first.buffer).fill(0);
+  assert.equal(second.toString('hex'), vector.entryHex);
+  assert.equal(syntheticJwsLogEntry(jws).toString('hex'), vector.entryHex);
+  assert.equal(verifySyntheticTiledLogProof(jws, proof(), policy()).leafSha256,
+    vector.leafSha256);
+});
+
 test('bundle and tile expose the exact entry at its signed index', () => {
   const bundle = decode(vector.proof.entryBundleBase64);
   const tile = decode(vector.proof.levelZeroTileBase64);
