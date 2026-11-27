@@ -1,0 +1,20 @@
+{
+  "scope": "local synthetic log artifact and checkpoint input preflight",
+  "byteValueHex": "61",
+  "maximumBytes": 131072,
+  "atMaximumSha256": "b44ffb72fcc259676bd80495fef1b44b808ca8f1ffe1b1706a4d7911b0e31f11",
+  "adjacentOversizeBytes": 131073,
+  "adjacentOversizeSha256": "7e009ea4ef882e385b3c0bcbbfa8d009bb0a633bdd764415c09182ee0e75da73",
+  "growableSharedView": {
+    "byteOffset": 8,
+    "admittedViewBytes": 131072,
+    "backingBytesBeforeCopy": 131080,
+    "backingBytesAfterGrowth": 131081,
+    "expectedSourceAndOwnedBytes": 131072,
+    "admittedContentSha256": "b44ffb72fcc259676bd80495fef1b44b808ca8f1ffe1b1706a4d7911b0e31f11"
+  },
+  "expectedAtMaximum": "INPUT_COPIED_THEN_CONTENT_REJECTED",
+  "expectedAdjacentOversize": "REJECTED_BEFORE_INPUT_COPY",
+  "expectedEmpty": "REJECTED_BEFORE_INPUT_COPY",
+  "claim": "local allocation order only; no deployed log, transport limit or denial-of-service claim"
+}

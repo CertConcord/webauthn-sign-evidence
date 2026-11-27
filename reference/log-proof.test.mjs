@@ -18,6 +18,7 @@ const laterVector = load('later-timestamp.json');
 const vector = load('log-proof.json');
 const rfcExample = load('log-proof-rfc6962-example.json');
 const policyVector = load('log-test-policy.json');
+const inputBoundary = load('log-input-boundary.json');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const decode = value => Buffer.from(value, 'base64');
 const jws = Buffer.from(jwsVector.compactAscii, 'ascii');
@@ -337,6 +338,195 @@ test('only a separately accepted old checkpoint can establish append-only contin
   assert.throws(() => verifySyntheticTiledLogProof(jws,
     proof({consistencyPathHex: vector.proof.consistencyPathHex.slice(0, -1)}),
     policy()), /Short consistency path/);
+});
+
+test('local artifact and both checkpoint bounds reject before copying input bytes', () => {
+  const limit = inputBoundary.maximumBytes;
+  const admitted = Buffer.alloc(limit, Number.parseInt(inputBoundary.byteValueHex, 16));
+  const tooLong = Buffer.alloc(inputBoundary.adjacentOversizeBytes,
+    Number.parseInt(inputBoundary.byteValueHex, 16));
+  assert.equal(sha(admitted), inputBoundary.atMaximumSha256);
+  assert.equal(sha(tooLong), inputBoundary.adjacentOversizeSha256);
+  const nativeUint8Array = globalThis.Uint8Array;
+  const nativeSet = nativeUint8Array.prototype.set;
+  const nativeBufferAlloc = Buffer.alloc;
+  const nativeViewBuffer = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(Uint8Array.prototype), 'buffer').get;
+  let target;
+  let sourceView;
+  let owned;
+  let observations;
+  globalThis.Uint8Array = class extends nativeUint8Array {
+    constructor(value, ...args) {
+      super(value, ...args);
+      if (target && value === nativeViewBuffer.call(target)) {
+        sourceView = this;
+        observations.push('fixed source view');
+      }
+    }
+  };
+  Buffer.alloc = function(size, ...args) {
+    const result = nativeBufferAlloc.call(this, size, ...args);
+    if (sourceView && !owned && size === sourceView.length) {
+      owned = result;
+      observations.push('owned allocation');
+    }
+    return result;
+  };
+  nativeUint8Array.prototype.set = function(source, ...args) {
+    if (this === owned && source === sourceView) observations.push('input copy');
+    return nativeSet.call(this, source, ...args);
+  };
+  const check = (input, run, error, expected, proofReads) => {
+    target = input;
+    sourceView = undefined;
+    owned = undefined;
+    observations = [];
+    assert.throws(run, error);
+    assert.deepEqual(observations, expected);
+    if (proofReads !== undefined) assert.equal(proofReads(), expected.includes('proof read') ? 1 : 0);
+  };
+  try {
+    for (const [name, run, admittedError, rejectedError] of [
+      ['artifact', input => () => restoreSyntheticLogProofArtifact(input),
+        /Malformed synthetic log proof artifact/, /Log proof artifact is empty or too long/],
+      ['current checkpoint', input => () => verifySyntheticTiledLogProof(jws,
+        proof({checkpointNoteBytes: input}), policy()),
+        /Malformed signed note/, /Checkpoint is empty or outside/],
+      ['previous checkpoint', input => {
+        let reads = 0;
+        const inputProof = proof();
+        Object.defineProperty(inputProof, 'checkpointNoteBytes', {get() {
+          reads += 1;
+          observations.push('proof read');
+          return decode(vector.proof.checkpointNoteBase64);
+        }});
+        return {run: () => verifySyntheticTiledLogProof(jws, inputProof,
+          policy({previousCheckpointNoteBytes: input})), reads: () => reads};
+      }, /Malformed signed note/, /Checkpoint is empty or outside/],
+    ]) {
+      const admittedCall = run(admitted);
+      const admittedRun = typeof admittedCall === 'function' ? admittedCall : admittedCall.run;
+      const admittedReads = typeof admittedCall === 'function' ? undefined : admittedCall.reads;
+      const admittedExpected = name === 'previous checkpoint'
+        ? ['fixed source view', 'owned allocation', 'input copy', 'proof read']
+        : ['fixed source view', 'owned allocation', 'input copy'];
+      check(admitted, admittedRun, admittedError, admittedExpected, admittedReads);
+      const rejectedCall = run(tooLong);
+      check(tooLong, typeof rejectedCall === 'function' ? rejectedCall : rejectedCall.run,
+        rejectedError, [], typeof rejectedCall === 'function' ? undefined : rejectedCall.reads);
+      const spoofed = Buffer.alloc(limit + 1, 0x61);
+      Object.defineProperties(spoofed, {
+        length: {value: 1}, byteLength: {value: 1},
+      });
+      const spoofedCall = run(spoofed);
+      check(spoofed, typeof spoofedCall === 'function' ? spoofedCall : spoofedCall.run,
+        rejectedError, [], typeof spoofedCall === 'function' ? undefined : spoofedCall.reads);
+      const empty = Buffer.alloc(0);
+      const emptyCall = run(empty);
+      check(empty, typeof emptyCall === 'function' ? emptyCall : emptyCall.run,
+        rejectedError, [], typeof emptyCall === 'function' ? undefined : emptyCall.reads);
+    }
+  } finally {
+    nativeUint8Array.prototype.set = nativeSet;
+    Buffer.alloc = nativeBufferAlloc;
+    globalThis.Uint8Array = nativeUint8Array;
+  }
+});
+
+test('growing a length-tracking shared view cannot expand an admitted snapshot', () => {
+  const limit = inputBoundary.maximumBytes;
+  const nativeUint8Array = globalThis.Uint8Array;
+  const nativeSet = nativeUint8Array.prototype.set;
+  const nativeAlloc = Buffer.alloc;
+  for (const [name, invoke, expectedError] of [
+    ['artifact', input => () => restoreSyntheticLogProofArtifact(input),
+      /Malformed synthetic log proof artifact/],
+    ['current checkpoint', input => () => verifySyntheticTiledLogProof(jws,
+      proof({checkpointNoteBytes: input}), policy()), /Malformed signed note/],
+    ['previous checkpoint', input => () => verifySyntheticTiledLogProof(jws,
+      proof(), policy({previousCheckpointNoteBytes: input})), /Malformed signed note/],
+  ]) {
+    const growth = inputBoundary.growableSharedView;
+    const backing = new SharedArrayBuffer(growth.backingBytesBeforeCopy,
+      {maxByteLength: growth.backingBytesAfterGrowth});
+    const tracking = new Uint8Array(backing, growth.byteOffset);
+    tracking.fill(0x61);
+    assert.equal(tracking.byteLength, growth.admittedViewBytes);
+    assert.equal(sha(tracking), growth.admittedContentSha256);
+    const run = invoke(tracking);
+    const seen = {name};
+    globalThis.Uint8Array = class extends nativeUint8Array {
+      constructor(value, ...args) {
+        super(value, ...args);
+        if (value !== backing) return;
+        seen.source = this;
+        seen.sourceOffset = args[0];
+        seen.sourceLength = args[1];
+      }
+    };
+    Buffer.alloc = function(size, ...args) {
+      if (seen.source && !seen.grew && size === limit) {
+        backing.grow(growth.backingBytesAfterGrowth);
+        seen.grew = true;
+      }
+      const result = nativeAlloc.call(this, size, ...args);
+      if (seen.grew && !seen.owned && size === limit) seen.owned = result;
+      return result;
+    };
+    nativeUint8Array.prototype.set = function(source, ...args) {
+      if (this === seen.owned && source === seen.source) {
+        seen.copied = source.byteLength;
+        seen.firstByte = source[0];
+        seen.lastByte = source[source.length - 1];
+      }
+      return nativeSet.call(this, source, ...args);
+    };
+    try {
+      assert.throws(run, expectedError);
+      assert.equal(backing.byteLength, growth.backingBytesAfterGrowth);
+      assert.deepEqual({offset: seen.sourceOffset, source: seen.sourceLength,
+        owned: seen.owned?.length, copied: seen.copied,
+        first: seen.firstByte, last: seen.lastByte,
+        ownedFirst: seen.owned?.[0], ownedLast: seen.owned?.[limit - 1]},
+      {offset: growth.byteOffset, source: growth.expectedSourceAndOwnedBytes,
+        owned: growth.expectedSourceAndOwnedBytes,
+        copied: growth.expectedSourceAndOwnedBytes,
+        first: 0x61, last: 0x61, ownedFirst: 0x61, ownedLast: 0x61});
+    } finally {
+      nativeUint8Array.prototype.set = nativeSet;
+      Buffer.alloc = nativeAlloc;
+      globalThis.Uint8Array = nativeUint8Array;
+    }
+  }
+});
+
+test('shadowed backing length cannot reject a genuine offset byte view', () => {
+  const current = decode(vector.proof.checkpointNoteBase64);
+  const previous = decode(policyVector.previousCheckpointBase64);
+  for (const Backing of [ArrayBuffer, SharedArrayBuffer]) {
+    for (const [name, original, run] of [
+      ['artifact', proofArtifact, input =>
+        restoreSyntheticLogProofArtifact(input).entryIndex],
+      ['current checkpoint', current, input =>
+        verifySyntheticTiledLogProof(jws,
+          proof({checkpointNoteBytes: input}), policy()).index],
+      ['previous checkpoint', previous, input =>
+        verifySyntheticTiledLogProof(jws, proof(),
+          policy({previousCheckpointNoteBytes: input})).index],
+    ]) {
+      const backing = new Backing(original.length + 16);
+      const view = new Uint8Array(backing, 8, original.length);
+      view.set(original);
+      let publicLengthReads = 0;
+      Object.defineProperty(backing, 'byteLength', {get() {
+        publicLengthReads += 1;
+        throw new Error('PUBLIC_BACKING_LENGTH_READ');
+      }});
+      assert.equal(run(view), vector.entryIndex, name);
+      assert.equal(publicLengthReads, 0, name);
+    }
+  }
 });
 
 test('raw log artifact restores the original proof without JSON field collapse', () => {

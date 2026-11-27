@@ -9,13 +9,35 @@ const artifactFormat = 'synthetic-one-partial-tile-proof-v1';
 const artifactKeys = ['format', 'entryIndex', 'checkpointNoteBase64',
   'entryBundleBase64', 'levelZeroTileBase64', 'inclusionPathHex',
   'consistencyPathHex'];
+const localInputBound = 131072;
+const byteViewPrototype = Object.getPrototypeOf(Uint8Array.prototype);
+const nativeByteLength = Object.getOwnPropertyDescriptor(
+  byteViewPrototype, 'byteLength').get;
+const nativeByteOffset = Object.getOwnPropertyDescriptor(
+  byteViewPrototype, 'byteOffset').get;
+const nativeBuffer = Object.getOwnPropertyDescriptor(
+  byteViewPrototype, 'buffer').get;
 const sha256 = bytes => createHash('sha256').update(bytes).digest();
 const nodeHash = (left, right) => sha256(Buffer.concat([Buffer.from([1]), left, right]));
 const leafHash = entry => sha256(Buffer.concat([Buffer.from([0]), entry]));
 
-function bytes(value, name) {
+function bytes(value, name, boundError) {
   if (!types.isUint8Array(value)) throw new TypeError(name + ' must be native bytes');
-  return Buffer.from(new Uint8Array(value).buffer);
+  if (!boundError) return Buffer.from(new Uint8Array(value).buffer);
+  const offset = nativeByteOffset.call(value);
+  const backing = nativeBuffer.call(value);
+  const length = nativeByteLength.call(value);
+  if (length === 0 || length > localInputBound) throw new TypeError(boundError);
+  // Keep both the source view and owned destination at the admitted extent.
+  // A length-tracking view may grow after the intrinsic length check.
+  const source = new Uint8Array(backing, offset, length);
+  const owned = Buffer.alloc(length);
+  if (nativeByteLength.call(source) !== length)
+    throw new TypeError(name + ' changed during snapshot copy');
+  owned.set(source);
+  if (nativeByteLength.call(source) !== length)
+    throw new TypeError(name + ' changed during snapshot copy');
+  return owned;
 }
 
 function hex32(value, name) {
@@ -97,9 +119,8 @@ function consistencyRoots(oldRoot, oldSize, newSize, pathHex) {
 }
 
 function signedCheckpoint(rawBytes, trust) {
-  const source = bytes(rawBytes, 'checkpoint');
-  if (source.length === 0 || source.length > 131072)
-    throw new TypeError('Checkpoint is empty or outside the synthetic size bound');
+  const source = bytes(rawBytes, 'checkpoint',
+    'Checkpoint is empty or outside the synthetic size bound');
   if (source.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])))
     throw new TypeError('Signed checkpoint BOM is not accepted');
   const raw = utf8.decode(source);
@@ -185,9 +206,8 @@ export function syntheticJwsLogEntry(jwsBytes) {
 // This narrow JSON encoding is byte-canonical within the synthetic fixture.
 // The re-encoding check rejects duplicate names before they can affect a claim.
 export function restoreSyntheticLogProofArtifact(artifactBytes) {
-  const source = bytes(artifactBytes, 'log proof artifact');
-  if (source.length === 0 || source.length > 131072)
-    throw new TypeError('Log proof artifact is empty or too long');
+  const source = bytes(artifactBytes, 'log proof artifact',
+    'Log proof artifact is empty or too long');
   if (source.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])))
     throw new TypeError('Malformed synthetic log proof artifact BOM');
   const raw = utf8.decode(source);
@@ -226,7 +246,8 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
     throw new TypeError('Proof and independent log policy are required');
   // Own the accepted prior bytes before any proof accessor can run.
   const previousCheckpointNoteBytes = bytes(
-    policy.previousCheckpointNoteBytes, 'previous checkpoint');
+    policy.previousCheckpointNoteBytes, 'previous checkpoint',
+    'Checkpoint is empty or outside the synthetic size bound');
   // Use one trust identity for the current and previously accepted checkpoint.
   const trust = {
     origin: policy.origin,
