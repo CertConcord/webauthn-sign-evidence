@@ -1,8 +1,11 @@
 // A pure model of two pinned draft algorithms. This does not parse CBOR or verify WebAuthn.
+// Both drafts use Web IDL long for COSEAlgorithmIdentifier (signed 32-bit).
+const isAlgorithm = value => Number.isInteger(value) &&
+  value >= -2147483648 && value <= 2147483647;
 const algorithms = (value, name) => {
   if (!Array.isArray(value) || value.length === 0 ||
-      value.some(item => !Number.isSafeInteger(item)))
-    throw new TypeError(`${name} must be a nonempty integer array`);
+      value.some(item => !isAlgorithm(item)))
+    throw new TypeError(`${name} must be a nonempty signed 32-bit algorithm array`);
   return value;
 };
 
@@ -64,8 +67,8 @@ export function decodeDraftSupportList(supportList) {
 }
 
 export function chooseDraftSigningAlgorithm(parentAlgorithm, candidates, support) {
-  if (!Number.isSafeInteger(parentAlgorithm))
-    throw new TypeError('parent algorithm must be an integer');
+  if (!isAlgorithm(parentAlgorithm))
+    throw new TypeError('parent algorithm must be signed 32-bit');
   algorithms(candidates, 'candidate algorithms');
   let unsupportedCombination = false;
   for (const candidate of candidates) {

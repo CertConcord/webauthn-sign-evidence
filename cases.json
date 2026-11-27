@@ -85,6 +85,13 @@
     {"id": "v6-cbor-signature-change-and-restoration", "expected": "JWS_COMPLETION_REJECTED_THEN_RECOVERED"},
     {"id": "v6-cbor-noncanonical-or-truncated-framing", "expected": "NARROW_DECODER_REJECTED"},
     {"id": "v6-cbor-canonical-256-byte-content", "expected": "CONTENT_OCTETS_PRESERVED"},
-    {"id": "v6-cbor-returned-native-byte-isolation", "expected": "INDEPENDENT_BACKING_STORES"}
+    {"id": "v6-cbor-returned-native-byte-isolation", "expected": "INDEPENDENT_BACKING_STORES"},
+    {"id": "v6-cbor-sign-plus-support", "expected": "SAME_TBS_SIGNATURE_AND_JWS_IMPRINT"},
+    {"id": "v6-cbor-sparse-support-list", "expected": "DECODED_INDEX_MATRIX_PAIRS"},
+    {"id": "v6-cbor-omitted-support", "expected": "CAPABILITY_UNKNOWN"},
+    {"id": "v6-cbor-false-or-empty-support", "expected": "REJECTED"},
+    {"id": "v6-cbor-noncanonical-support", "expected": "REJECTED"},
+    {"id": "v6-cbor-algorithm-identifier-endpoints", "expected": "SIGNED_32_BIT_ENDPOINTS_ACCEPTED_ON_BOTH_AXES"},
+    {"id": "v6-cbor-algorithm-identifier-neighbors", "expected": "ADJACENT_OUT_OF_RANGE_VALUES_REJECTED_ON_BOTH_AXES"}
   ]
 }

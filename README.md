@@ -28,6 +28,8 @@ A [source-exact v6 ML-DSA example](vectors/source-v6-ml-dsa-example.json) exerci
 
 A [synthetic v6 CBOR boundary vector](vectors/source-v6-cbor-boundary.json) connects the draft's inner `kh`/`tbs` request map and `sig` output map to the existing Ed25519 compact JWS example. It verifies the exact `tbs` content bytes, excludes the CBOR byte-string header and full map from the signature input, then hashes the completed JWS. The narrow decoder does not parse WebAuthn, validate a signing key handle or attest an authenticator.
 
+A [sign plus optional support CBOR vector](vectors/source-v6-sign-support-cbor.json) keeps those exact signing bytes while adding `support: true` to the request and a decoded support list to one response. A response that omits support leaves capability unknown. A second response connects a sparse CBOR list to the source model's parent/child index rules. Both parent and child COSE algorithm identifiers are limited to Web IDL `long` (signed 32-bit); eight byte cases check each endpoint and its adjacent excluded value on each axis. The decoder accepts only fixed-order inner maps and bounded canonical CBOR; these examples do not establish an authenticator capability or a Framework algorithm selection.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check
