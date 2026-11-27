@@ -17,6 +17,14 @@
     {"id": "optional-jws-json-whitespace-retains-original-bytes", "expected": "VALID_SIGNATURE_DIFFERENT_IMPRINT"},
     {"id": "optional-jws-non-json-whitespace", "expected": "INVALID_HEADER"},
     {"id": "optional-jws-byte-restoration", "expected": "ORIGINAL_IMPRINT_RECOVERED"},
-    {"id": "optional-jws-later-outer-proof", "expected": "ORIGINAL_IMPRINT_UNCHANGED"}
+    {"id": "optional-jws-later-outer-proof", "expected": "ORIGINAL_IMPRINT_UNCHANGED"},
+    {"id": "synthetic-response-original-request-and-artifact", "expected": "BYTE_BOUND_TEST_SIGNATURE_VALID_TRUST_UNESTABLISHED"},
+    {"id": "synthetic-response-changed-signature-byte", "expected": "IMPRINT_MISMATCH"},
+    {"id": "synthetic-response-reserialized-resigned-artifact", "expected": "IMPRINT_MISMATCH"},
+    {"id": "synthetic-response-changed-imprint-without-resigning", "expected": "CMS_VERIFICATION_FAILED"},
+    {"id": "synthetic-response-invalid-status-token-pair", "expected": "INVALID_RESPONSE"},
+    {"id": "synthetic-response-unrelated-test-root", "expected": "TEST_CHAIN_REJECTED"},
+    {"id": "synthetic-response-changed-request-nonce", "expected": "NONCE_MISMATCH"},
+    {"id": "synthetic-response-changed-request-policy", "expected": "POLICY_MISMATCH"}
   ]
 }
