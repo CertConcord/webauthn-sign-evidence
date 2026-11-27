@@ -21,6 +21,21 @@ for (const source of json('sources.json').sources) {
     assert(Number.isSafeInteger(source.bytes) && source.bytes > 0);
   }
 }
+const relatedIetfDrafts = json('sources.json').relatedIetfDrafts;
+assert.deepEqual(relatedIetfDrafts.map(item => item.id), [
+  'citedCoseTwoPartyIndividual01', 'coseSplitSigningWg01Comparison',
+]);
+for (const source of relatedIetfDrafts) {
+  assert.match(source.url, /^https:\/\/www\.ietf\.org\/archive\/id\/draft-[a-z0-9-]+-01\.txt$/);
+  assert.match(source.sha256, /^[a-f0-9]{64}$/);
+  assert(Number.isSafeInteger(source.bytes) && source.bytes > 0);
+  assert.equal(typeof source.role, 'string');
+}
+const argsFraming = json('vectors/source-v6-args-framing.json');
+assert.equal(argsFraming.source.citedCoseIndividual01Sha256,
+  relatedIetfDrafts[0].sha256);
+assert.equal(argsFraming.source.laterCoseWg01Sha256,
+  relatedIetfDrafts[1].sha256);
 
 const vector = json('vectors/direct-input.json');
 for (const field of ['tbsHex', 'tbsSha256', 'signatureHex', 'publicKeySpkiDerHex',

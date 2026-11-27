@@ -73,5 +73,21 @@
       "sha256": "b7245023b9bb17fc7092de5d5958bfeed4a14ce91da53a5d990b5f9f56ba7e2c",
       "bytes": 757213
     }
+  ],
+  "relatedIetfDrafts": [
+    {
+      "id": "citedCoseTwoPartyIndividual01",
+      "url": "https://www.ietf.org/archive/id/draft-lundberg-cose-two-party-signing-algs-01.txt",
+      "sha256": "cb4f17a1d06cb051868d39dec34bf9f6a88ebded8d67e122ef6b7f239ffc0a1f",
+      "bytes": 30232,
+      "role": "Cited by both pinned WebAuthn proposals; this archived version does not define COSE_Sign_Args"
+    },
+    {
+      "id": "coseSplitSigningWg01Comparison",
+      "url": "https://www.ietf.org/archive/id/draft-ietf-cose-split-signing-algs-01.txt",
+      "sha256": "b09ffd2ad33dad912f01bf916722d2b7eb439cf5c0f5b4591bb81fcef93a95ec",
+      "bytes": 54472,
+      "role": "Later comparison only; not selected for member-level args semantics"
+    }
   ]
 }

@@ -92,6 +92,11 @@
     {"id": "v6-cbor-false-or-empty-support", "expected": "REJECTED"},
     {"id": "v6-cbor-noncanonical-support", "expected": "REJECTED"},
     {"id": "v6-cbor-algorithm-identifier-endpoints", "expected": "SIGNED_32_BIT_ENDPOINTS_ACCEPTED_ON_BOTH_AXES"},
-    {"id": "v6-cbor-algorithm-identifier-neighbors", "expected": "ADJACENT_OUT_OF_RANGE_VALUES_REJECTED_ON_BOTH_AXES"}
+    {"id": "v6-cbor-algorithm-identifier-neighbors", "expected": "ADJACENT_OUT_OF_RANGE_VALUES_REJECTED_ON_BOTH_AXES"},
+    {"id": "v6-args-outer-bstr-and-support", "expected": "OPAQUE_BYTES_AND_ORIGINAL_TBS_RETAINED"},
+    {"id": "v6-args-absence-versus-presence", "expected": "NULL_ABSENCE_AND_EXACT_PRESENT_BYTES_DISTINCT"},
+    {"id": "v6-args-duplicate-order-type-or-length", "expected": "FIXED_OUTER_FRAMING_REJECTED"},
+    {"id": "v6-args-returned-byte-isolation", "expected": "INDEPENDENT_EXACT_BACKING_STORES"},
+    {"id": "v6-args-nested-cose-semantics", "expected": "NO_MEMBER_LEVEL_VERDICT"}
   ]
 }

@@ -1,0 +1,60 @@
+{
+  "scope": "Fixed-order inner request outer CBOR field framing only. The args bstr contents are opaque; COSE_Sign_Args member semantics, authenticated signing and CTAP errors are not tested.",
+  "source": {
+    "yubicoV6Commit": "7dcd66cb9a4a75c9f2a654ba90cfdbcf8e22e24f",
+    "w3cPr2078Commit": "f2a5c86f6a093964d1cf471abadc1ab6ee4bc90d",
+    "citedCoseIndividual01Sha256": "cb4f17a1d06cb051868d39dec34bf9f6a88ebded8d67e122ef6b7f239ffc0a1f",
+    "laterCoseWg01Sha256": "b09ffd2ad33dad912f01bf916722d2b7eb439cf5c0f5b4591bb81fcef93a95ec"
+  },
+  "baseRequestMapHex": "a20244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b",
+  "baseRequestMapSha256": "eb14b97ef0c706519938b3c60f574a022d8581bd02de1a8ffe1114ee137e727f",
+  "supportOnlyRequestMapHex": "a30244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b08f5",
+  "supportOnlyRequestMapSha256": "c631bf7ca9da4011824b6ac3cba0c730d550504378b993001c9a9e3a42fa2881",
+  "argsContentHex": "a10326",
+  "encodedArgsFieldHex": "43a10326",
+  "tbsContentSha256": "cac847ebc9c8c225537e7d9a875116d375009b4878a405fda99d9e9a789d54f2",
+  "cases": [
+    {
+      "id": "args-outer-bstr",
+      "mapHex": "a30244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b0743a10326",
+      "bytes": 64,
+      "sha256": "b7f8d5de9cf8017d05f0a3f6160292f0a12bc93f9ea4433976f280cbfb55ccfe",
+      "framing": "EXTRACT_OPAQUE_ARGS"
+    },
+    {
+      "id": "args-and-support-outer-bstr",
+      "mapHex": "a40244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b0743a1032608f5",
+      "bytes": 66,
+      "sha256": "cc2ce27ea45f3a37e6a3e0c40be122eb5240d9c3e55a9ac4aedbc76f3a4a9b38",
+      "framing": "EXTRACT_OPAQUE_ARGS"
+    },
+    {
+      "id": "support-before-args",
+      "mapHex": "a40244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b08f50743a10326",
+      "bytes": 66,
+      "sha256": "8f3bdb72bdbab25a829309d952b425f89e41eff1cd4956228887add39c8dff73",
+      "framing": "REJECT"
+    },
+    {
+      "id": "duplicate-args",
+      "mapHex": "a40244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b0743a103260743a10326",
+      "bytes": 69,
+      "sha256": "7a0b7341ea5e6b376d5a6af54bd73a7877d0236b651e7e27275a70bfe357378d",
+      "framing": "REJECT"
+    },
+    {
+      "id": "noncanonical-args-bstr-length",
+      "mapHex": "a30244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b075803a10326",
+      "bytes": 65,
+      "sha256": "b7583ae51365d3d1c8f5213a7346bab52dd7b1ba9a431e821cb7cbcb20db6da0",
+      "framing": "REJECT"
+    },
+    {
+      "id": "args-not-bstr",
+      "mapHex": "a30244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b07a10326",
+      "bytes": 63,
+      "sha256": "66bb6591d9dd2e56e5c69a46e747e305b56b1a1132ea79f5221c765cacc1dbc5",
+      "framing": "REJECT"
+    }
+  ]
+}
