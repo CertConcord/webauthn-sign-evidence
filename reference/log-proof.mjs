@@ -224,13 +224,16 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
   if (proof === null || typeof proof !== 'object' ||
       policy === null || typeof policy !== 'object')
     throw new TypeError('Proof and independent log policy are required');
+  // Own the accepted prior bytes before any proof accessor can run.
+  const previousCheckpointNoteBytes = bytes(
+    policy.previousCheckpointNoteBytes, 'previous checkpoint');
   // Use one trust identity for the current and previously accepted checkpoint.
   const trust = {
     origin: policy.origin,
     keyName: policy.keyName,
     keyIdHex: policy.keyIdHex,
     publicKeyRawHex: policy.publicKeyRawHex,
-    previousCheckpointNoteBytes: policy.previousCheckpointNoteBytes,
+    previousCheckpointNoteBytes,
   };
   if (typeof trust.origin !== 'string' || typeof trust.keyName !== 'string')
     throw new TypeError('Proof and independent log policy are required');
