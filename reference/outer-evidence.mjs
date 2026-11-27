@@ -8,11 +8,12 @@ const sha256 = value => createHash('sha256').update(value).digest('hex');
 const jsonString = /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"/y;
 
 function copyBytes(value, name) {
-  if (!(value instanceof Uint8Array) || value.length === 0)
+  if (!(value instanceof Uint8Array))
     throw new TypeError(`${name} must be nonempty bytes`);
-  const isolated = Buffer.allocUnsafeSlow(value.length);
-  isolated.set(value);
-  return isolated;
+  const snapshot = new Uint8Array(value);
+  if (snapshot.byteLength === 0)
+    throw new TypeError(name + ' must be nonempty bytes');
+  return Buffer.from(snapshot.buffer);
 }
 
 function decodeBase64(value, name, optional = false) {

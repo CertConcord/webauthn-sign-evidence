@@ -215,6 +215,27 @@ test('returned byte fields have independent backing storage', () => {
   assert.deepEqual(withLog.serializeBytes(), beforeSerializationEdit);
 });
 
+test('copy uses the intrinsic byte extent despite a caller length override', () => {
+  const misreported = (bytes, length) => {
+    const input = Uint8Array.from(bytes);
+    Object.defineProperty(input, 'length', {value: length});
+    return input;
+  };
+  const recovered = freezeSyntheticOuterEvidence(
+    misreported(artifact, artifact.length + 3),
+    misreported(request, 0))
+    .withTimestampResponse(misreported(response, response.length + 2))
+    .withUnverifiedLogArtifact(misreported(logArtifact, 1));
+  assert.deepEqual(recovered.compactJwsBytes(), artifact);
+  assert.deepEqual(recovered.timestampRequestDerBytes(), request);
+  assert.deepEqual(recovered.timestampResponseDerBytes(), response);
+  assert.deepEqual(recovered.unverifiedLogArtifactBytes(), logArtifact);
+  assert.deepEqual(recovered.fingerprints(), withLog.fingerprints());
+  const empty = Uint8Array.of();
+  Object.defineProperty(empty, 'length', {value: 1});
+  assert.throws(() => freezeSyntheticOuterEvidence(empty, request), /nonempty bytes/);
+});
+
 test('duplicate decoded JSON member names are rejected in either order', () => {
   const original = withLog.serializeBytes().toString('utf8');
   const replacement = Buffer.from('changed frozen bytes').toString('base64');

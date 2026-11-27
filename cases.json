@@ -34,6 +34,7 @@
     {"id": "outer-record-changed-response", "expected": "REVALIDATION_REQUIRED"},
     {"id": "outer-record-changed-opaque-log-bytes", "expected": "FIRST_IMPRINT_UNCHANGED_LOG_UNVERIFIED"},
     {"id": "outer-record-duplicate-decoded-member-name", "expected": "REJECTED_BEFORE_FIELD_COLLAPSE"},
-    {"id": "outer-record-independent-backing-storage", "expected": "RETAINED_BYTES_UNCHANGED_BY_RETURNED_VIEWS"}
+    {"id": "outer-record-independent-backing-storage", "expected": "RETAINED_BYTES_UNCHANGED_BY_RETURNED_VIEWS"},
+    {"id": "outer-record-overridden-input-length", "expected": "INTRINSIC_BYTE_EXTENT_ONLY"}
   ]
 }
