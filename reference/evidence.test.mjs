@@ -83,6 +83,23 @@ test('recorded policy downgrade does not change verifier policy', () => {
   assert.deepEqual(inspectSyntheticOperation(restored, requiredPolicy), baseline);
 });
 
+test('a verifier policy requirement is fixed by one read', () => {
+  let reads = 0;
+  const changingPolicy = {
+    requireUserPresence: false,
+    requireUserVerification: false,
+    requireAssociatedWebAuthnResult: false,
+  };
+  Object.defineProperty(changingPolicy, 'requireAttestation', {
+    get() { return ++reads === 1; },
+  });
+  const result = inspectSyntheticOperation(record, changingPolicy);
+  assert.equal(result.signatureMathValid, true);
+  assert.equal(reads, 1);
+  assert.equal(result.policySatisfied, false);
+  assert.deepEqual(result.unmetEvidence, ['attestationVerified']);
+});
+
 test('verifier policy must be complete and explicit', () => {
   assert.throws(() => inspectSyntheticOperation(record), /Verifier policy is required/);
   assert.throws(() => inspectSyntheticOperation(record, {}),
