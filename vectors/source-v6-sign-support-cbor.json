@@ -1,0 +1,76 @@
+{
+  "scope": "Synthetic sign plus optional support inner CBOR only; no WebAuthn or authenticator runtime.",
+  "source": {
+    "yubicoV6Commit": "7dcd66cb9a4a75c9f2a654ba90cfdbcf8e22e24f",
+    "w3cPr2078Commit": "f2a5c86f6a093964d1cf471abadc1ab6ee4bc90d"
+  },
+  "baseRequestMapHex": "a20244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b",
+  "baseResponseMapHex": "a1065840069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c",
+  "signSupportRequestMapHex": "a30244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b08f5",
+  "signSupportRequestSha256": "c631bf7ca9da4011824b6ac3cba0c730d550504378b993001c9a9e3a42fa2881",
+  "signSupportResponseMapHex": "a2065840069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c0882822627822627",
+  "signSupportResponseSha256": "700f3ffd20e9cd2775c8e218bb5d723afe714b67e82c372556422e8d937a033e",
+  "omittedSupportResponseMapHex": "a1065840069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c",
+  "falseSupportRequestMapHex": "a30244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b08f4",
+  "falseSupportRequestSha256": "da21bbcd50ab2e6d873c4c06391331d3be02dc4ef0beeaa6db226ccc6d82367d",
+  "emptySupportResponseMapHex": "a2065840069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c0880",
+  "emptySupportResponseSha256": "efa5d8db7c2c227b97b730306bf4fff9e67cf359fdb9b9b08e4304665c858b1d",
+  "sparseSupportResponseMapHex": "a2065840069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c0885822627822839012bf40000",
+  "sparseSupportResponseSha256": "6ab9de9bb4eac23f6c70486759a33e41cb457bf7183ba18f41a045ff771cd2b1",
+  "expectedSupportList": [
+    [
+      -7,
+      -8
+    ],
+    [
+      -7,
+      -8
+    ]
+  ],
+  "expectedPairs": [
+    [
+      -8,
+      -8
+    ],
+    [
+      -8,
+      -7
+    ],
+    [
+      -7,
+      -8
+    ],
+    [
+      -7,
+      -7
+    ]
+  ],
+  "expectedSparseSupportList": [
+    [
+      -7,
+      -8
+    ],
+    [
+      -9,
+      -300
+    ],
+    false,
+    0,
+    0
+  ],
+  "expectedSparsePairs": [
+    [
+      -8,
+      -300
+    ],
+    [
+      -8,
+      -9
+    ],
+    [
+      -7,
+      -300
+    ]
+  ],
+  "completeCompactJwsSha256": "8fcf9a9ea5f191b5463d43c2c223f86cf96341c62b5c14545045a6d52aec2bf7"
+}
