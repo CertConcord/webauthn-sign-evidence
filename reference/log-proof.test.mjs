@@ -19,6 +19,7 @@ const vector = load('log-proof.json');
 const rfcExample = load('log-proof-rfc6962-example.json');
 const policyVector = load('log-test-policy.json');
 const inputBoundary = load('log-input-boundary.json');
+const derivedBoundary = load('log-derived-input-boundary.json');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const decode = value => Buffer.from(value, 'base64');
 const jws = Buffer.from(jwsVector.compactAscii, 'ascii');
@@ -338,6 +339,90 @@ test('only a separately accepted old checkpoint can establish append-only contin
   assert.throws(() => verifySyntheticTiledLogProof(jws,
     proof({consistencyPathHex: vector.proof.consistencyPathHex.slice(0, -1)}),
     policy()), /Short consistency path/);
+});
+
+test('signed size bounds bundle and tile before copying their input bytes', () => {
+  const count = derivedBoundary.signedCheckpointSize;
+  assert.equal(count, vector.currentSize);
+  const maximum = count * (derivedBoundary.entryLengthPrefixBytes +
+    derivedBoundary.maximumEntryBytes);
+  assert.equal(maximum, derivedBoundary.bundleMaximumBytes);
+  const fullBundle = Buffer.alloc(maximum);
+  for (let offset = 0; offset < maximum; offset += 65537) {
+    fullBundle.writeUInt16BE(65535, offset);
+    fullBundle.fill(0x61, offset + 2, offset + 65537);
+  }
+  const oversizedBundle = Buffer.concat([fullBundle, Buffer.from([0])]);
+  const fullTile = decode(vector.proof.levelZeroTileBase64);
+  const oversizedTile = Buffer.concat([fullTile, Buffer.from([0])]);
+  const shortTile = fullTile.subarray(0, fullTile.length - 1);
+  assert.equal(fullTile.length, derivedBoundary.tileExpectedBytes);
+  assert.equal(sha(fullBundle), derivedBoundary.bundleAtMaximumSha256);
+  assert.equal(sha(oversizedBundle), derivedBoundary.bundleAdjacentOversizeSha256);
+  assert.equal(sha(fullTile), derivedBoundary.tileAtExpectedSha256);
+  assert.equal(sha(oversizedTile), derivedBoundary.tileAdjacentOversizeSha256);
+  const nativeUint8Array = globalThis.Uint8Array;
+  const nativeSet = nativeUint8Array.prototype.set;
+  const nativeAlloc = Buffer.alloc;
+  const viewPrototype = Object.getPrototypeOf(nativeUint8Array.prototype);
+  const viewBuffer = Object.getOwnPropertyDescriptor(viewPrototype, 'buffer').get;
+  const viewOffset = Object.getOwnPropertyDescriptor(viewPrototype, 'byteOffset').get;
+  const viewLength = Object.getOwnPropertyDescriptor(viewPrototype, 'byteLength').get;
+  let target;
+  let source;
+  let owned;
+  let events;
+  globalThis.Uint8Array = class extends nativeUint8Array {
+    constructor(backing, ...args) {
+      super(backing, ...args);
+      if (target && backing === viewBuffer.call(target) &&
+          args[0] === viewOffset.call(target) &&
+          args[1] === viewLength.call(target)) {
+        source = this;
+        events.push('fixed source view');
+      }
+    }
+  };
+  Buffer.alloc = function(size, ...args) {
+    const result = nativeAlloc.call(this, size, ...args);
+    if (source && !owned && size === viewLength.call(target)) {
+      owned = result;
+      events.push('owned allocation');
+    }
+    return result;
+  };
+  nativeUint8Array.prototype.set = function(input, ...args) {
+    if (this === owned && input === source) events.push('input copy');
+    return nativeSet.call(this, input, ...args);
+  };
+  const check = (input, changes, expectedEvents, error) => {
+    target = input;
+    source = undefined;
+    owned = undefined;
+    events = [];
+    const run = () => verifySyntheticTiledLogProof(jws, proof(changes), policy());
+    if (error) assert.throws(run, error);
+    else assert.equal(run().index, vector.proof.entryIndex);
+    assert.deepEqual(events, expectedEvents);
+  };
+  const copied = ['fixed source view', 'owned allocation', 'input copy'];
+  try {
+    check(fullBundle, {entryBundleBytes: fullBundle}, copied, /Logged entry differs/);
+    check(oversizedBundle, {entryBundleBytes: oversizedBundle}, [],
+      /Entry bundle exceeds signed checkpoint size bound/);
+    const emptyBundle = Buffer.alloc(0);
+    check(emptyBundle, {entryBundleBytes: emptyBundle}, copied,
+      /Entry count differs from checkpoint/);
+    check(fullTile, {levelZeroTileBytes: fullTile}, copied);
+    check(oversizedTile, {levelZeroTileBytes: oversizedTile}, [],
+      /Level-zero partial tile has wrong width/);
+    check(shortTile, {levelZeroTileBytes: shortTile}, [],
+      /Level-zero partial tile has wrong width/);
+  } finally {
+    nativeUint8Array.prototype.set = nativeSet;
+    Buffer.alloc = nativeAlloc;
+    globalThis.Uint8Array = nativeUint8Array;
+  }
 });
 
 test('local artifact and both checkpoint bounds reject before copying input bytes', () => {
