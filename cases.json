@@ -61,6 +61,7 @@
     {"id": "synthetic-log-artifact-and-checkpoint-max-input", "expected": "INPUT_COPIED_THEN_CONTENT_REJECTED"},
     {"id": "synthetic-log-artifact-and-checkpoint-over-limit", "expected": "REJECTED_BEFORE_INPUT_COPY"},
     {"id": "synthetic-log-artifact-and-checkpoint-empty-input", "expected": "REJECTED_BEFORE_INPUT_COPY"},
+    {"id": "synthetic-log-length-tracking-shared-view-growth", "expected": "SOURCE_AND_OWNED_COPY_STAY_AT_ADMITTED_EXTENT"},
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
     {"id": "synthetic-log-rfc6962-seven-leaf-paths", "expected": "THREE_PRIOR_SIZES_AND_INCLUSION_VERIFIED"},
     {"id": "synthetic-log-rfc6962-altered-consistency-node", "expected": "THREE_CHANGED_PATHS_REJECTED"},

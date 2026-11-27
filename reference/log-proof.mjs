@@ -10,20 +10,31 @@ const artifactKeys = ['format', 'entryIndex', 'checkpointNoteBase64',
   'entryBundleBase64', 'levelZeroTileBase64', 'inclusionPathHex',
   'consistencyPathHex'];
 const localInputBound = 131072;
+const byteViewPrototype = Object.getPrototypeOf(Uint8Array.prototype);
 const nativeByteLength = Object.getOwnPropertyDescriptor(
-  Object.getPrototypeOf(Uint8Array.prototype), 'byteLength').get;
+  byteViewPrototype, 'byteLength').get;
+const nativeByteOffset = Object.getOwnPropertyDescriptor(
+  byteViewPrototype, 'byteOffset').get;
+const nativeBuffer = Object.getOwnPropertyDescriptor(
+  byteViewPrototype, 'buffer').get;
 const sha256 = bytes => createHash('sha256').update(bytes).digest();
 const nodeHash = (left, right) => sha256(Buffer.concat([Buffer.from([1]), left, right]));
 const leafHash = entry => sha256(Buffer.concat([Buffer.from([0]), entry]));
 
 function bytes(value, name, boundError) {
   if (!types.isUint8Array(value)) throw new TypeError(name + ' must be native bytes');
-  // Check the intrinsic length before the constructor allocates and copies.
-  if (boundError) {
-    const length = nativeByteLength.call(value);
-    if (length === 0 || length > localInputBound) throw new TypeError(boundError);
-  }
-  return Buffer.from(new Uint8Array(value).buffer);
+  if (!boundError) return Buffer.from(new Uint8Array(value).buffer);
+  const offset = nativeByteOffset.call(value);
+  const backing = nativeBuffer.call(value);
+  const length = nativeByteLength.call(value);
+  if (length === 0 || length > localInputBound) throw new TypeError(boundError);
+  // Keep both the source view and owned destination at the admitted extent.
+  // A length-tracking view may grow after the intrinsic length check.
+  const source = Buffer.from(backing, offset, length);
+  const owned = Buffer.alloc(length);
+  if (source.copy(owned) !== length)
+    throw new TypeError(name + ' changed during snapshot copy');
+  return owned;
 }
 
 function hex32(value, name) {

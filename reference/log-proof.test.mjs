@@ -347,27 +347,43 @@ test('local artifact and both checkpoint bounds reject before copying input byte
     Number.parseInt(inputBoundary.byteValueHex, 16));
   assert.equal(sha(admitted), inputBoundary.atMaximumSha256);
   assert.equal(sha(tooLong), inputBoundary.adjacentOversizeSha256);
-  const nativeUint8Array = globalThis.Uint8Array;
   const nativeBufferFrom = Buffer.from;
+  const nativeBufferAlloc = Buffer.alloc;
+  const nativeBufferCopy = Buffer.prototype.copy;
+  const nativeViewBuffer = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(Uint8Array.prototype), 'buffer').get;
   let target;
-  let copiedBacking;
+  let sourceView;
+  let owned;
+  let awaitOwned;
   let observations;
-  globalThis.Uint8Array = class extends nativeUint8Array {
-    constructor(value, ...args) {
-      super(value, ...args);
-      if (value === target) {
-        copiedBacking = this.buffer;
-        observations.push('input copy');
-      }
-    }
-  };
   Buffer.from = function(value, ...args) {
-    if (value === copiedBacking) observations.push('owned backing');
-    return nativeBufferFrom.call(this, value, ...args);
+    const result = nativeBufferFrom.call(this, value, ...args);
+    if (target && value === nativeViewBuffer.call(target)) {
+      sourceView = result;
+      awaitOwned = true;
+      observations.push('fixed source view');
+    }
+    return result;
+  };
+  Buffer.alloc = function(size, ...args) {
+    const result = nativeBufferAlloc.call(this, size, ...args);
+    if (awaitOwned && size === sourceView.length) {
+      owned = result;
+      awaitOwned = false;
+      observations.push('owned allocation');
+    }
+    return result;
+  };
+  Buffer.prototype.copy = function(destination, ...args) {
+    if (this === sourceView && destination === owned) observations.push('input copy');
+    return nativeBufferCopy.call(this, destination, ...args);
   };
   const check = (input, run, error, expected, proofReads) => {
     target = input;
-    copiedBacking = undefined;
+    sourceView = undefined;
+    owned = undefined;
+    awaitOwned = false;
     observations = [];
     assert.throws(run, error);
     assert.deepEqual(observations, expected);
@@ -396,8 +412,8 @@ test('local artifact and both checkpoint bounds reject before copying input byte
       const admittedRun = typeof admittedCall === 'function' ? admittedCall : admittedCall.run;
       const admittedReads = typeof admittedCall === 'function' ? undefined : admittedCall.reads;
       const admittedExpected = name === 'previous checkpoint'
-        ? ['input copy', 'owned backing', 'proof read']
-        : ['input copy', 'owned backing'];
+        ? ['fixed source view', 'owned allocation', 'input copy', 'proof read']
+        : ['fixed source view', 'owned allocation', 'input copy'];
       check(admitted, admittedRun, admittedError, admittedExpected, admittedReads);
       const rejectedCall = run(tooLong);
       check(tooLong, typeof rejectedCall === 'function' ? rejectedCall : rejectedCall.run,
@@ -415,8 +431,72 @@ test('local artifact and both checkpoint bounds reject before copying input byte
         rejectedError, [], typeof emptyCall === 'function' ? undefined : emptyCall.reads);
     }
   } finally {
+    Buffer.prototype.copy = nativeBufferCopy;
+    Buffer.alloc = nativeBufferAlloc;
     Buffer.from = nativeBufferFrom;
-    globalThis.Uint8Array = nativeUint8Array;
+  }
+});
+
+test('growing a length-tracking shared view cannot expand an admitted snapshot', () => {
+  const limit = inputBoundary.maximumBytes;
+  const nativeFrom = Buffer.from;
+  const nativeAlloc = Buffer.alloc;
+  const nativeCopy = Buffer.prototype.copy;
+  for (const [name, invoke, expectedError] of [
+    ['artifact', input => () => restoreSyntheticLogProofArtifact(input),
+      /Malformed synthetic log proof artifact/],
+    ['current checkpoint', input => () => verifySyntheticTiledLogProof(jws,
+      proof({checkpointNoteBytes: input}), policy()), /Malformed signed note/],
+    ['previous checkpoint', input => () => verifySyntheticTiledLogProof(jws,
+      proof(), policy({previousCheckpointNoteBytes: input})), /Malformed signed note/],
+  ]) {
+    const growth = inputBoundary.growableSharedView;
+    const backing = new SharedArrayBuffer(growth.backingBytesBeforeCopy,
+      {maxByteLength: growth.backingBytesAfterGrowth});
+    const tracking = new Uint8Array(backing, growth.byteOffset);
+    tracking.fill(0x61);
+    assert.equal(tracking.byteLength, growth.admittedViewBytes);
+    assert.equal(sha(tracking), growth.admittedContentSha256);
+    const run = invoke(tracking);
+    const seen = {name};
+    Buffer.from = function(value, ...args) {
+      if (value === backing && !seen.grew) {
+        backing.grow(growth.backingBytesAfterGrowth);
+        seen.grew = true;
+        seen.sourceOffset = args[0];
+        seen.sourceLength = args[1];
+      }
+      return nativeFrom.call(this, value, ...args);
+    };
+    Buffer.alloc = function(size, ...args) {
+      const result = nativeAlloc.call(this, size, ...args);
+      if (seen.grew && !seen.owned && size === limit) seen.owned = result;
+      return result;
+    };
+    Buffer.prototype.copy = function(destination, ...args) {
+      const copied = nativeCopy.call(this, destination, ...args);
+      if (this.buffer === backing && destination === seen.owned) {
+        seen.copied = copied;
+        seen.firstByte = this[0];
+        seen.lastByte = this[this.length - 1];
+      }
+      return copied;
+    };
+    try {
+      assert.throws(run, expectedError);
+      assert.equal(backing.byteLength, growth.backingBytesAfterGrowth);
+      assert.deepEqual({offset: seen.sourceOffset, source: seen.sourceLength,
+        owned: seen.owned?.length, copied: seen.copied,
+        first: seen.firstByte, last: seen.lastByte},
+      {offset: growth.byteOffset, source: growth.expectedSourceAndOwnedBytes,
+        owned: growth.expectedSourceAndOwnedBytes,
+        copied: growth.expectedSourceAndOwnedBytes,
+        first: 0x61, last: 0x61});
+    } finally {
+      Buffer.prototype.copy = nativeCopy;
+      Buffer.alloc = nativeAlloc;
+      Buffer.from = nativeFrom;
+    }
   }
 });
 
