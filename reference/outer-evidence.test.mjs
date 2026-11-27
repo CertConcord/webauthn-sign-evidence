@@ -236,6 +236,19 @@ test('copy uses the intrinsic byte extent despite a caller length override', () 
   assert.throws(() => freezeSyntheticOuterEvidence(empty, request), /nonempty bytes/);
 });
 
+test('byte input requires a native Uint8Array brand rather than a forged prototype', () => {
+  const forged = Object.create(Uint8Array.prototype);
+  forged[Symbol.iterator] = function* () { yield 0x41; yield 0x42; };
+  assert.equal(forged instanceof Uint8Array, true);
+  assert.throws(() => freezeSyntheticOuterEvidence(forged, request), /nonempty bytes/);
+  assert.throws(() => withResponse.withUnverifiedLogArtifact(forged), /nonempty bytes/);
+  const holder = Buffer.allocUnsafeSlow(artifact.length + 4);
+  holder.set(artifact, 2);
+  const subview = holder.subarray(2, 2 + artifact.length);
+  assert.deepEqual(freezeSyntheticOuterEvidence(subview, request).compactJwsBytes(),
+    artifact);
+});
+
 test('duplicate decoded JSON member names are rejected in either order', () => {
   const original = withLog.serializeBytes().toString('utf8');
   const replacement = Buffer.from('changed frozen bytes').toString('base64');

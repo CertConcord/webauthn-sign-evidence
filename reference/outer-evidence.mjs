@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {types} from 'node:util';
 
 const format = 'synthetic-outer-evidence-byte-record-v1';
 const keys = ['format', 'compactJwsBase64', 'timestampRequestDerBase64',
@@ -8,7 +9,7 @@ const sha256 = value => createHash('sha256').update(value).digest('hex');
 const jsonString = /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"/y;
 
 function copyBytes(value, name) {
-  if (!(value instanceof Uint8Array))
+  if (!types.isUint8Array(value))
     throw new TypeError(`${name} must be nonempty bytes`);
   const snapshot = new Uint8Array(value);
   if (snapshot.byteLength === 0)
