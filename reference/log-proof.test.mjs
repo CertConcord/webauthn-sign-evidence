@@ -347,43 +347,40 @@ test('local artifact and both checkpoint bounds reject before copying input byte
     Number.parseInt(inputBoundary.byteValueHex, 16));
   assert.equal(sha(admitted), inputBoundary.atMaximumSha256);
   assert.equal(sha(tooLong), inputBoundary.adjacentOversizeSha256);
-  const nativeBufferFrom = Buffer.from;
+  const nativeUint8Array = globalThis.Uint8Array;
+  const nativeSet = nativeUint8Array.prototype.set;
   const nativeBufferAlloc = Buffer.alloc;
-  const nativeBufferCopy = Buffer.prototype.copy;
   const nativeViewBuffer = Object.getOwnPropertyDescriptor(
     Object.getPrototypeOf(Uint8Array.prototype), 'buffer').get;
   let target;
   let sourceView;
   let owned;
-  let awaitOwned;
   let observations;
-  Buffer.from = function(value, ...args) {
-    const result = nativeBufferFrom.call(this, value, ...args);
-    if (target && value === nativeViewBuffer.call(target)) {
-      sourceView = result;
-      awaitOwned = true;
-      observations.push('fixed source view');
+  globalThis.Uint8Array = class extends nativeUint8Array {
+    constructor(value, ...args) {
+      super(value, ...args);
+      if (target && value === nativeViewBuffer.call(target)) {
+        sourceView = this;
+        observations.push('fixed source view');
+      }
     }
-    return result;
   };
   Buffer.alloc = function(size, ...args) {
     const result = nativeBufferAlloc.call(this, size, ...args);
-    if (awaitOwned && size === sourceView.length) {
+    if (sourceView && !owned && size === sourceView.length) {
       owned = result;
-      awaitOwned = false;
       observations.push('owned allocation');
     }
     return result;
   };
-  Buffer.prototype.copy = function(destination, ...args) {
-    if (this === sourceView && destination === owned) observations.push('input copy');
-    return nativeBufferCopy.call(this, destination, ...args);
+  nativeUint8Array.prototype.set = function(source, ...args) {
+    if (this === owned && source === sourceView) observations.push('input copy');
+    return nativeSet.call(this, source, ...args);
   };
   const check = (input, run, error, expected, proofReads) => {
     target = input;
     sourceView = undefined;
     owned = undefined;
-    awaitOwned = false;
     observations = [];
     assert.throws(run, error);
     assert.deepEqual(observations, expected);
@@ -431,17 +428,17 @@ test('local artifact and both checkpoint bounds reject before copying input byte
         rejectedError, [], typeof emptyCall === 'function' ? undefined : emptyCall.reads);
     }
   } finally {
-    Buffer.prototype.copy = nativeBufferCopy;
+    nativeUint8Array.prototype.set = nativeSet;
     Buffer.alloc = nativeBufferAlloc;
-    Buffer.from = nativeBufferFrom;
+    globalThis.Uint8Array = nativeUint8Array;
   }
 });
 
 test('growing a length-tracking shared view cannot expand an admitted snapshot', () => {
   const limit = inputBoundary.maximumBytes;
-  const nativeFrom = Buffer.from;
+  const nativeUint8Array = globalThis.Uint8Array;
+  const nativeSet = nativeUint8Array.prototype.set;
   const nativeAlloc = Buffer.alloc;
-  const nativeCopy = Buffer.prototype.copy;
   for (const [name, invoke, expectedError] of [
     ['artifact', input => () => restoreSyntheticLogProofArtifact(input),
       /Malformed synthetic log proof artifact/],
@@ -459,43 +456,75 @@ test('growing a length-tracking shared view cannot expand an admitted snapshot',
     assert.equal(sha(tracking), growth.admittedContentSha256);
     const run = invoke(tracking);
     const seen = {name};
-    Buffer.from = function(value, ...args) {
-      if (value === backing && !seen.grew) {
-        backing.grow(growth.backingBytesAfterGrowth);
-        seen.grew = true;
+    globalThis.Uint8Array = class extends nativeUint8Array {
+      constructor(value, ...args) {
+        super(value, ...args);
+        if (value !== backing) return;
+        seen.source = this;
         seen.sourceOffset = args[0];
         seen.sourceLength = args[1];
       }
-      return nativeFrom.call(this, value, ...args);
     };
     Buffer.alloc = function(size, ...args) {
+      if (seen.source && !seen.grew && size === limit) {
+        backing.grow(growth.backingBytesAfterGrowth);
+        seen.grew = true;
+      }
       const result = nativeAlloc.call(this, size, ...args);
       if (seen.grew && !seen.owned && size === limit) seen.owned = result;
       return result;
     };
-    Buffer.prototype.copy = function(destination, ...args) {
-      const copied = nativeCopy.call(this, destination, ...args);
-      if (this.buffer === backing && destination === seen.owned) {
-        seen.copied = copied;
-        seen.firstByte = this[0];
-        seen.lastByte = this[this.length - 1];
+    nativeUint8Array.prototype.set = function(source, ...args) {
+      if (this === seen.owned && source === seen.source) {
+        seen.copied = source.byteLength;
+        seen.firstByte = source[0];
+        seen.lastByte = source[source.length - 1];
       }
-      return copied;
+      return nativeSet.call(this, source, ...args);
     };
     try {
       assert.throws(run, expectedError);
       assert.equal(backing.byteLength, growth.backingBytesAfterGrowth);
       assert.deepEqual({offset: seen.sourceOffset, source: seen.sourceLength,
         owned: seen.owned?.length, copied: seen.copied,
-        first: seen.firstByte, last: seen.lastByte},
+        first: seen.firstByte, last: seen.lastByte,
+        ownedFirst: seen.owned?.[0], ownedLast: seen.owned?.[limit - 1]},
       {offset: growth.byteOffset, source: growth.expectedSourceAndOwnedBytes,
         owned: growth.expectedSourceAndOwnedBytes,
         copied: growth.expectedSourceAndOwnedBytes,
-        first: 0x61, last: 0x61});
+        first: 0x61, last: 0x61, ownedFirst: 0x61, ownedLast: 0x61});
     } finally {
-      Buffer.prototype.copy = nativeCopy;
+      nativeUint8Array.prototype.set = nativeSet;
       Buffer.alloc = nativeAlloc;
-      Buffer.from = nativeFrom;
+      globalThis.Uint8Array = nativeUint8Array;
+    }
+  }
+});
+
+test('shadowed backing length cannot reject a genuine offset byte view', () => {
+  const current = decode(vector.proof.checkpointNoteBase64);
+  const previous = decode(policyVector.previousCheckpointBase64);
+  for (const Backing of [ArrayBuffer, SharedArrayBuffer]) {
+    for (const [name, original, run] of [
+      ['artifact', proofArtifact, input =>
+        restoreSyntheticLogProofArtifact(input).entryIndex],
+      ['current checkpoint', current, input =>
+        verifySyntheticTiledLogProof(jws,
+          proof({checkpointNoteBytes: input}), policy()).index],
+      ['previous checkpoint', previous, input =>
+        verifySyntheticTiledLogProof(jws, proof(),
+          policy({previousCheckpointNoteBytes: input})).index],
+    ]) {
+      const backing = new Backing(original.length + 16);
+      const view = new Uint8Array(backing, 8, original.length);
+      view.set(original);
+      let publicLengthReads = 0;
+      Object.defineProperty(backing, 'byteLength', {get() {
+        publicLengthReads += 1;
+        throw new Error('PUBLIC_BACKING_LENGTH_READ');
+      }});
+      assert.equal(run(view), vector.entryIndex, name);
+      assert.equal(publicLengthReads, 0, name);
     }
   }
 });

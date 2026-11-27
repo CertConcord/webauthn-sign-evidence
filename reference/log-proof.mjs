@@ -30,9 +30,12 @@ function bytes(value, name, boundError) {
   if (length === 0 || length > localInputBound) throw new TypeError(boundError);
   // Keep both the source view and owned destination at the admitted extent.
   // A length-tracking view may grow after the intrinsic length check.
-  const source = Buffer.from(backing, offset, length);
+  const source = new Uint8Array(backing, offset, length);
   const owned = Buffer.alloc(length);
-  if (source.copy(owned) !== length)
+  if (nativeByteLength.call(source) !== length)
+    throw new TypeError(name + ' changed during snapshot copy');
+  owned.set(source);
+  if (nativeByteLength.call(source) !== length)
     throw new TypeError(name + ' changed during snapshot copy');
   return owned;
 }
