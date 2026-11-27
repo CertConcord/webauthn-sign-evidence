@@ -16,6 +16,8 @@ An [additive v6/W3C source-model vector](vectors/source-v6-model.json) tests par
 
 A [source-exact v6 ML-DSA example](vectors/source-v6-ml-dsa-example.json) exercises the published sparse matrix: eight excluded parent/child pairs out of 36 possible, with error and later-candidate checks. It describes a draft example, not a device capability claim or a selected PQC document profile.
 
+A [synthetic v6 CBOR boundary vector](vectors/source-v6-cbor-boundary.json) connects the draft's inner `kh`/`tbs` request map and `sig` output map to the existing Ed25519 compact JWS example. It verifies the exact `tbs` content bytes, excludes the CBOR byte-string header and full map from the signature input, then hashes the completed JWS. The narrow decoder does not parse WebAuthn, validate a signing key handle or attest an authenticator.
+
 Run with Node.js 24.15 or later and OpenSSL 3.x on `PATH`:
 
     npm run check

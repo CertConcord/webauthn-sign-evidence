@@ -1,0 +1,12 @@
+{
+  "scope": "Synthetic inner CBOR sign request and response only; no browser, authenticator, surrounding authData, key-handle validation or attestation",
+  "sourceExampleInputHex": "a202400643616263",
+  "sourceExampleTbsContentHex": "616263",
+  "syntheticJwsBridge": {
+    "requestMapHex": "a20244a1b2c3d406583165794a68624763694f694a465a45525451534a392e415039445a584a3051323975593239795a43424b56314d67646a454b",
+    "responseMapHex": "a1065840069c4bb4d5210e704afe3648ac46550eb43fe06120ec1f0ad568b5ca896ce33d7b4326a63a542a0953f3c0894affa13afa1b312c3fa7563cae7cda1903b2460c",
+    "keyHandleHex": "a1b2c3d4",
+    "tbsContentSha256": "cac847ebc9c8c225537e7d9a875116d375009b4878a405fda99d9e9a789d54f2",
+    "completeCompactJwsSha256": "8fcf9a9ea5f191b5463d43c2c223f86cf96341c62b5c14545045a6d52aec2bf7"
+  }
+}
