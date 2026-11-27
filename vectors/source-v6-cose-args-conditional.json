@@ -1,0 +1,68 @@
+{
+  "scope": "Pure conditional error-5/6 model after an externally verified key handle; exact outer args bytes are retained but not semantically decoded by the component",
+  "source": {
+    "yubicoV6Commit": "7dcd66cb9a4a75c9f2a654ba90cfdbcf8e22e24f",
+    "w3cPr2078Head": "f2a5c86f6a093964d1cf471abadc1ab6ee4bc90d",
+    "citedCoseIndividual01Sha256": "cb4f17a1d06cb051868d39dec34bf9f6a88ebded8d67e122ef6b7f239ffc0a1f",
+    "comparisonCoseWg02Sha256": "727d93c73fc67bfdb1de428ac3d6425521019459a8053982b5b3d6ff2c18854b"
+  },
+  "trustedChosenAlg": -7,
+  "cases": [
+    {
+      "id": "omitted-args-skips-this-stage",
+      "outerHex": "a202400643616263",
+      "outerSha256": "2933f31457e5891881ae5c84f20e0676e4340d89365804790fffc9d60280cbce",
+      "argsContentHex": null,
+      "argsContentSha256": null,
+      "decoderFinding": {"kind": "omitted"},
+      "expected": "ARGS_STAGE_SKIPPED"
+    },
+    {
+      "id": "malformed-nested-break-is-five",
+      "outerHex": "a3024006436162630741ff",
+      "outerSha256": "bb3a1503b1cb423744e3f27a2e7b2a9a9e376f0156a34a3bb20f554c47755a94",
+      "argsContentHex": "ff",
+      "argsContentSha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+      "decoderFinding": {"kind": "invalid"},
+      "expected": "CONDITIONAL_ERROR_5"
+    },
+    {
+      "id": "empty-map-strict-structure-is-five",
+      "outerHex": "a3024006436162630741a0",
+      "outerSha256": "ffb9a48f64237b060a0a6735a3ec34c4c517201fd8137a0c87a4778012b56bbe",
+      "argsContentHex": "a0",
+      "argsContentSha256": "c19a797fa1fd590cd2e5b42d1cf5f246e29b91684e2f87404b81dc345c7a56a0",
+      "decoderFinding": {"kind": "invalid"},
+      "interpretation": "WG -02 structure decoder enforces required alg before returning a map",
+      "expected": "CONDITIONAL_ERROR_5"
+    },
+    {
+      "id": "empty-map-generic-map-is-six",
+      "outerHex": "a3024006436162630741a0",
+      "outerSha256": "ffb9a48f64237b060a0a6735a3ec34c4c517201fd8137a0c87a4778012b56bbe",
+      "argsContentHex": "a0",
+      "argsContentSha256": "c19a797fa1fd590cd2e5b42d1cf5f246e29b91684e2f87404b81dc345c7a56a0",
+      "decoderFinding": {"kind": "map"},
+      "interpretation": "Generic CBOR map decoder returns empty map before proposal alg-presence check",
+      "expected": "CONDITIONAL_ERROR_6"
+    },
+    {
+      "id": "different-alg-is-six",
+      "outerHex": "a3024006436162630743a10327",
+      "outerSha256": "cf040868f18af03c982dba51f1ad76e9d978ef9f0a540e46555ff5461d0e4699",
+      "argsContentHex": "a10327",
+      "argsContentSha256": "965a86ff47c3e43059d72b6aa4b5082a9bef456305a804cdf882747fcbf847ed",
+      "decoderFinding": {"kind": "map", "alg": -8},
+      "expected": "CONDITIONAL_ERROR_6"
+    },
+    {
+      "id": "matching-alg-passes-only-this-stage",
+      "outerHex": "a3024006436162630743a10326",
+      "outerSha256": "08eb252ae703575732c5cdb022d5a95612acb4f16ecd0f36c92c589a4f3955a2",
+      "argsContentHex": "a10326",
+      "argsContentSha256": "77491e976b1e3decc4e5b108e63f9d837de71b04c25286d401faff4581bfd541",
+      "decoderFinding": {"kind": "map", "alg": -7},
+      "expected": "ARGS_ALG_STAGE_PASSED"
+    }
+  ]
+}

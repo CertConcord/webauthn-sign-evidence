@@ -24,9 +24,10 @@ for (const source of json('sources.json').sources) {
 const relatedIetfDrafts = json('sources.json').relatedIetfDrafts;
 assert.deepEqual(relatedIetfDrafts.map(item => item.id), [
   'citedCoseTwoPartyIndividual01', 'coseSplitSigningWg01Comparison',
+  'coseSplitSigningWg02Comparison',
 ]);
 for (const source of relatedIetfDrafts) {
-  assert.match(source.url, /^https:\/\/www\.ietf\.org\/archive\/id\/draft-[a-z0-9-]+-01\.txt$/);
+  assert.match(source.url, /^https:\/\/www\.ietf\.org\/archive\/id\/draft-[a-z0-9-]+-(?:01|02)\.txt$/);
   assert.match(source.sha256, /^[a-f0-9]{64}$/);
   assert(Number.isSafeInteger(source.bytes) && source.bytes > 0);
   assert.equal(typeof source.role, 'string');
@@ -36,6 +37,20 @@ assert.equal(argsFraming.source.citedCoseIndividual01Sha256,
   relatedIetfDrafts[0].sha256);
 assert.equal(argsFraming.source.laterCoseWg01Sha256,
   relatedIetfDrafts[1].sha256);
+const conditionalArgs = json('vectors/source-v6-cose-args-conditional.json');
+assert.equal(conditionalArgs.source.citedCoseIndividual01Sha256,
+  relatedIetfDrafts[0].sha256);
+assert.equal(conditionalArgs.source.comparisonCoseWg02Sha256,
+  relatedIetfDrafts[2].sha256);
+assert.equal(conditionalArgs.cases.length, 6);
+for (const item of conditionalArgs.cases) {
+  assert.match(item.outerHex, /^(?:[a-f0-9]{2})+$/);
+  assert.match(item.outerSha256, /^[a-f0-9]{64}$/);
+  if (item.argsContentHex !== null)
+    assert.match(item.argsContentHex, /^(?:[a-f0-9]{2})+$/);
+  if (item.argsContentSha256 !== null)
+    assert.match(item.argsContentSha256, /^[a-f0-9]{64}$/);
+}
 const precopy = json('vectors/source-v6-cbor-precopy.json');
 assert.equal(precopy.maxRequestBytes, 1 + 3 * (1 + 3 + precopy.fieldContentBytes) + 2);
 assert.equal(precopy.overLimitBytes, precopy.maxRequestBytes + 1);

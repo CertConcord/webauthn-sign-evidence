@@ -98,6 +98,12 @@
     {"id": "v6-args-duplicate-order-type-or-length", "expected": "FIXED_OUTER_FRAMING_REJECTED"},
     {"id": "v6-args-returned-byte-isolation", "expected": "INDEPENDENT_EXACT_BACKING_STORES"},
     {"id": "v6-args-nested-cose-semantics", "expected": "NO_MEMBER_LEVEL_VERDICT"},
+    {"id": "v6-cose-args-omitted-skips-stage", "expected": "ARGS_STAGE_SKIPPED"},
+    {"id": "v6-cose-args-malformed-is-five", "expected": "CONDITIONAL_ERROR_5"},
+    {"id": "v6-cose-args-empty-strict-is-five", "expected": "CONDITIONAL_ERROR_5"},
+    {"id": "v6-cose-args-empty-generic-is-six", "expected": "CONDITIONAL_ERROR_6"},
+    {"id": "v6-cose-args-mismatch-is-six", "expected": "CONDITIONAL_ERROR_6"},
+    {"id": "v6-cose-args-match-passes-stage", "expected": "ARGS_ALG_STAGE_PASSED"},
     {"id": "v6-cbor-precopy-over-limit", "expected": "REJECTED_BEFORE_FULL_COPY"},
     {"id": "v6-cbor-precopy-max-supported-map", "expected": "EXACT_BOUNDARY_ACCEPTED"}
   ]
