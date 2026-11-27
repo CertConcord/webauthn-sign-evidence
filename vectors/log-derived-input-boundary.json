@@ -1,0 +1,12 @@
+{
+  "format": "synthetic-log-derived-input-boundary-v1",
+  "signedCheckpointSize": 5,
+  "entryLengthPrefixBytes": 2,
+  "maximumEntryBytes": 65535,
+  "bundleMaximumBytes": 327685,
+  "bundleAtMaximumSha256": "d63e0dbd136c8baf405b08b1d0087231365e9d2929ad1403a0b7532ddf206a3a",
+  "bundleAdjacentOversizeSha256": "fb239d65754062f8e15ce3789404489e4ae1e76907589b1054618f9dda17d0ba",
+  "tileExpectedBytes": 160,
+  "tileAtExpectedSha256": "98e6955431caf36f47773da6afd3466eb6e53840c34a3ad21eb80959d2568065",
+  "tileAdjacentOversizeSha256": "e0cf4cfd49acf2c939f9a408833f54831d2fa4422ce0c5ce54d0602da6e1f958"
+}

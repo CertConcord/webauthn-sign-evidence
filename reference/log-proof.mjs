@@ -21,13 +21,14 @@ const sha256 = bytes => createHash('sha256').update(bytes).digest();
 const nodeHash = (left, right) => sha256(Buffer.concat([Buffer.from([1]), left, right]));
 const leafHash = entry => sha256(Buffer.concat([Buffer.from([0]), entry]));
 
-function bytes(value, name, boundError) {
+function bytes(value, name, bound) {
   if (!types.isUint8Array(value)) throw new TypeError(name + ' must be native bytes');
-  if (!boundError) return Buffer.from(new Uint8Array(value).buffer);
+  if (!bound) return Buffer.from(new Uint8Array(value).buffer);
   const offset = nativeByteOffset.call(value);
   const backing = nativeBuffer.call(value);
   const length = nativeByteLength.call(value);
-  if (length === 0 || length > localInputBound) throw new TypeError(boundError);
+  if (length < bound.minimum || length > bound.maximum)
+    throw new TypeError(bound.error);
   // Keep both the source view and owned destination at the admitted extent.
   // A length-tracking view may grow after the intrinsic length check.
   const source = new Uint8Array(backing, offset, length);
@@ -119,8 +120,9 @@ function consistencyRoots(oldRoot, oldSize, newSize, pathHex) {
 }
 
 function signedCheckpoint(rawBytes, trust) {
-  const source = bytes(rawBytes, 'checkpoint',
-    'Checkpoint is empty or outside the synthetic size bound');
+  const source = bytes(rawBytes, 'checkpoint', {minimum: 1,
+    maximum: localInputBound,
+    error: 'Checkpoint is empty or outside the synthetic size bound'});
   if (source.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])))
     throw new TypeError('Signed checkpoint BOM is not accepted');
   const raw = utf8.decode(source);
@@ -180,7 +182,9 @@ function signedCheckpoint(rawBytes, trust) {
 }
 
 function bundleEntries(bundleBytes, count) {
-  const source = bytes(bundleBytes, 'entry bundle');
+  const source = bytes(bundleBytes, 'entry bundle', {minimum: 0,
+    maximum: count * (2 + 65535),
+    error: 'Entry bundle exceeds signed checkpoint size bound'});
   const entries = [];
   let offset = 0;
   while (offset < source.length) {
@@ -206,8 +210,9 @@ export function syntheticJwsLogEntry(jwsBytes) {
 // This narrow JSON encoding is byte-canonical within the synthetic fixture.
 // The re-encoding check rejects duplicate names before they can affect a claim.
 export function restoreSyntheticLogProofArtifact(artifactBytes) {
-  const source = bytes(artifactBytes, 'log proof artifact',
-    'Log proof artifact is empty or too long');
+  const source = bytes(artifactBytes, 'log proof artifact', {minimum: 1,
+    maximum: localInputBound,
+    error: 'Log proof artifact is empty or too long'});
   if (source.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])))
     throw new TypeError('Malformed synthetic log proof artifact BOM');
   const raw = utf8.decode(source);
@@ -246,8 +251,9 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
     throw new TypeError('Proof and independent log policy are required');
   // Own the accepted prior bytes before any proof accessor can run.
   const previousCheckpointNoteBytes = bytes(
-    policy.previousCheckpointNoteBytes, 'previous checkpoint',
-    'Checkpoint is empty or outside the synthetic size bound');
+    policy.previousCheckpointNoteBytes, 'previous checkpoint', {minimum: 1,
+      maximum: localInputBound,
+      error: 'Checkpoint is empty or outside the synthetic size bound'});
   // Use one trust identity for the current and previously accepted checkpoint.
   const trust = {
     origin: policy.origin,
@@ -269,9 +275,10 @@ export function verifySyntheticTiledLogProof(jwsBytes, proof, policy) {
   const entries = bundleEntries(proof.entryBundleBytes, current.size);
   if (!entries[index].equals(expectedEntry))
     throw new TypeError('Logged entry differs from the complete JWS digest entry');
-  const tile = bytes(proof.levelZeroTileBytes, 'level-zero tile');
-  if (tile.length !== 32 * current.size)
-    throw new TypeError('Level-zero partial tile has wrong width');
+  const tileWidth = 32 * current.size;
+  const tile = bytes(proof.levelZeroTileBytes, 'level-zero tile',
+    {minimum: tileWidth, maximum: tileWidth,
+      error: 'Level-zero partial tile has wrong width'});
   const hashes = entries.map((entry, index) => {
     const hash = leafHash(entry);
     if (!hash.equals(tile.subarray(index * 32, (index + 1) * 32)))

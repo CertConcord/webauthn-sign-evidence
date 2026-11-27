@@ -61,6 +61,8 @@
     {"id": "synthetic-log-artifact-and-checkpoint-max-input", "expected": "INPUT_COPIED_THEN_CONTENT_REJECTED"},
     {"id": "synthetic-log-artifact-and-checkpoint-over-limit", "expected": "REJECTED_BEFORE_INPUT_COPY"},
     {"id": "synthetic-log-artifact-and-checkpoint-empty-input", "expected": "REJECTED_BEFORE_INPUT_COPY"},
+    {"id": "synthetic-log-entry-bundle-derived-ceiling", "expected": "AT_CEILING_COPIED_AND_ENTRY_CHECKED; ABOVE_CEILING_REJECTED_BEFORE_COPY"},
+    {"id": "synthetic-log-level-zero-tile-derived-width", "expected": "EXACT_WIDTH_COPIED_AND_VERIFIED; ADJACENT_WIDTHS_REJECTED_BEFORE_COPY"},
     {"id": "synthetic-log-length-tracking-shared-view-growth", "expected": "SOURCE_AND_OWNED_COPY_STAY_AT_ADMITTED_EXTENT"},
     {"id": "synthetic-log-shadowed-backing-length", "expected": "GENUINE_OFFSET_VIEWS_RETAIN_ORIGINAL_BYTES"},
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
