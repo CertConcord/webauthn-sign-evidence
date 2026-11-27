@@ -1,0 +1,80 @@
+{
+  "scope": "RFC 6962 Section 2.1.3 seven-leaf topology with synthetic JWS entry and test-only signed checkpoints",
+  "source": "https://www.rfc-editor.org/info/rfc6962/",
+  "sourceSection": "2.1.3",
+  "privateKeyPublished": false,
+  "deployedLogEstablished": false,
+  "trustedTimeEstablished": false,
+  "jwsSha256": "8fcf9a9ea5f191b5463d43c2c223f86cf96341c62b5c14545045a6d52aec2bf7",
+  "origin": "example.invalid/certconcord-rfc6962-example",
+  "keyName": "example.invalid/certconcord-rfc6962-example",
+  "keyIdHex": "01020304",
+  "publicKeyRawHex": "885dca5b8a5cb6e55b8fcbf6ecf0af32e1a4af7bb4e12028a7d9ae16c9465c61",
+  "entryIndex": 6,
+  "entryBundleBase64": "ABFyZmM2OTYyLWV4YW1wbGUtMAARcmZjNjk2Mi1leGFtcGxlLTEAEXJmYzY5NjItZXhhbXBsZS0yABFyZmM2OTYyLWV4YW1wbGUtMwARcmZjNjk2Mi1leGFtcGxlLTQAEXJmYzY5NjItZXhhbXBsZS01ACdDQ1dTTDEAj8+anqXxkbVGPUPCwiP4bPljQcYrXBRUUEWm1SrsK/c=",
+  "levelZeroTileBase64": "4pU6tBtix6eNwPO912w1PGn+5rtvuTks7WPS1VN4v+SvgqUaGOQfi94rr0IKFeUwEIjugZfGzlIoKi84iWvH85y/yrYAa+PE2HPQmzlVZEyVGm1QLQCKvtZDCwWWd0A412zKuOTcVn/03mnmfmlFbYQoRskj+AOic9BriGzduJTblTNlq8cNsZiDg7SVMt8icNw0ex9+fzt17Kvujkng3uPfCbVnxkzQ9UXkgI7hJkOcUucUEdfzb5np4iDuagVs+iMleX0g3NQS+UZ5HA6Xv7TEb6F6sBCf1nFRuyCsFHk=",
+  "nodeHex": {
+    "a": "e2953ab41b62c7a78dc0f3bdd76c353c69fee6bb6fb9392ced63d2d55378bfe4",
+    "b": "af82a51a18e41f8bde2baf420a15e5301088ee8197c6ce52282a2f38896bc7f3",
+    "c": "9cbfcab6006be3c4d873d09b3955644c951a6d502d008abed6430b0596774038",
+    "d": "d76ccab8e4dc567ff4de69e67e69456d842846c923f803a273d06b886cddb894",
+    "e": "db953365abc70db1988383b49532df2270dc347b1f7e7f3b75ecabee8e49e0de",
+    "f": "e3df09b567c64cd0f545e4808ee126439c52e71411d7f36f99e9e220ee6a056c",
+    "g": "5ff24aff755217936cde15e71ad13aa6c29311c07f90a0667f239686d3e4e26d",
+    "h": "8c66ab0332b9b9973799bd5e6e6bc3abba1d920985a7eae728d6138dbe9d28bb",
+    "i": "9c47fa868457f2fed85302ae1bda80b7eee9262a7780aa5923cbc7d1f251a818",
+    "j": "fa2325797d20dcd412f946791c0e97bfb4c46fa17ab0109fd67151bb20ac1479",
+    "k": "8793511de399803398660c08683e89147ae3189e0374f571becde505c50aaf16",
+    "l": "3ba6a8f9d9d66abf9c4c9dfb841ea4c791bd91257e3845bae653de9ea17bbf5c"
+  },
+  "rootHex": {
+    "3": "d3b51f36046112ad38618a11bf45009fa2f0183fc932b366d67262aaac667e1d",
+    "4": "8793511de399803398660c08683e89147ae3189e0374f571becde505c50aaf16",
+    "6": "7e4b1d92bf9bcd2a4bdcfeea2f6fe2f55db7d58b889b9b089144fab4158bf4c0",
+    "7": "eecbcbed7e13f4a0d6b913e932106b128eaaa96d5518d2ddd68bc755c03d35d7"
+  },
+  "currentCheckpointBase64": "ZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZQo3Cjdzdkw3WDRUOUtEV3VSUHBNaEJyRW82cXFXMVZHTkxkMW92SFZjQTlOZGM9CgrigJQgZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZSBBUUlEQkpvb1FhT3ZIdFRweWV0TjNHeDNiRi9CTDNUZjF2WFM1U2JxdW1ZY0U3MU9TL1Y1amF0b2d3QjMzL29XSVRRL2o0Wnd3R3JNQ2FyMjZPNDdtUXI4YndvPQo=",
+  "inclusionPathHex": [
+    "9c47fa868457f2fed85302ae1bda80b7eee9262a7780aa5923cbc7d1f251a818",
+    "8793511de399803398660c08683e89147ae3189e0374f571becde505c50aaf16"
+  ],
+  "prior": {
+    "3": {
+      "checkpointBase64": "ZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZQozCjA3VWZOZ1JoRXEwNFlZb1J2MFVBbjZMd0dEL0pNck5tMW5KaXFxeG1maDA9CgrigJQgZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZSBBUUlEQkkrZ3VKRmRRSHAvb1JIZVBWZUxTSk11QjJvTnplWElVTXdQRWFqc1lNeU0vVS96eTZCSDVLaThtNU56ZmN3c1pSeXJJV0VxY04raEhqbDdDTWl6SHd3PQo=",
+      "consistencyPathHex": [
+        "9cbfcab6006be3c4d873d09b3955644c951a6d502d008abed6430b0596774038",
+        "d76ccab8e4dc567ff4de69e67e69456d842846c923f803a273d06b886cddb894",
+        "5ff24aff755217936cde15e71ad13aa6c29311c07f90a0667f239686d3e4e26d",
+        "3ba6a8f9d9d66abf9c4c9dfb841ea4c791bd91257e3845bae653de9ea17bbf5c"
+      ],
+      "rfcNodes": [
+        "c",
+        "d",
+        "g",
+        "l"
+      ]
+    },
+    "4": {
+      "checkpointBase64": "ZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZQo0Cmg1TlJIZU9aZ0RPWVpnd0lhRDZKRkhyakdKNERkUFZ4dnMzbEJjVUtyeFk9CgrigJQgZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZSBBUUlEQk1CQm45UWVJb2NGR1cwcEw3NGNwejUvY1pvOE5xZy9GaCtPRVdqNTcxZjRNUnJ5S1l3bi9vMFY3cHlxbGhBZlFWd3VDcDFmNUwwa3NITm1WNXRySlFJPQo=",
+      "consistencyPathHex": [
+        "3ba6a8f9d9d66abf9c4c9dfb841ea4c791bd91257e3845bae653de9ea17bbf5c"
+      ],
+      "rfcNodes": [
+        "l"
+      ]
+    },
+    "6": {
+      "checkpointBase64": "ZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZQo2CmZrc2RrcitielNwTDNQN3FMMi9pOVYyMzFZdUltNXNJa1VUNnRCV0w5TUE9CgrigJQgZXhhbXBsZS5pbnZhbGlkL2NlcnRjb25jb3JkLXJmYzY5NjItZXhhbXBsZSBBUUlEQkR4eDlkYTlxcjNGa2htK2g5UWZoRXFrR1lHZk9jRlZYSzVCQTl2QkVqTmQ0WDZHR0FvVUgza2ZGQmxOakR2Q3lSdWp3MytTeDVuU2VEWjFpZjZ2cWdZPQo=",
+      "consistencyPathHex": [
+        "9c47fa868457f2fed85302ae1bda80b7eee9262a7780aa5923cbc7d1f251a818",
+        "fa2325797d20dcd412f946791c0e97bfb4c46fa17ab0109fd67151bb20ac1479",
+        "8793511de399803398660c08683e89147ae3189e0374f571becde505c50aaf16"
+      ],
+      "rfcNodes": [
+        "i",
+        "j",
+        "k"
+      ]
+    }
+  }
+}
