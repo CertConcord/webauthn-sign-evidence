@@ -1,5 +1,5 @@
 {
-  "scope": "synthetic direct-input signature semantics; no WebAuthn runtime",
+  "scope": "synthetic direct-input, time/log byte boundaries and v6 source model; no WebAuthn runtime",
   "cases": [
     {"id": "exact-tbs-and-key", "expected": "VALID"},
     {"id": "changed-tbs-octet", "expected": "INVALID"},
@@ -53,6 +53,15 @@
     {"id": "synthetic-log-inconsistent-prior-checkpoint", "expected": "CONSISTENCY_REJECTED"},
     {"id": "synthetic-log-raw-proof-artifact", "expected": "FIXED_FIELD_ORDER_AND_EXACT_BYTES_RESTORED"},
     {"id": "synthetic-log-entry-index-read-once", "expected": "ONE_INDEX_USED_THROUGH_ALL_CHECKS"},
-    {"id": "synthetic-log-new-outer-snapshot", "expected": "FIRST_IMPRINT_STABLE_SECOND_IMPRINT_REBUILT"}
+    {"id": "synthetic-log-new-outer-snapshot", "expected": "FIRST_IMPRINT_STABLE_SECOND_IMPRINT_REBUILT"},
+    {"id": "v6-sparse-parent-child-exclusion", "expected": "SORTED_MATRIX_EXCLUDES_ONE_PAIR"},
+    {"id": "v6-sparse-parent-child-inclusion", "expected": "SORTED_MATRIX_INCLUDES_ONE_PAIR"},
+    {"id": "v6-optional-child-list-and-range-indices", "expected": "INDEX_POSITIONS_DECODED"},
+    {"id": "v6-unsupported-parent-child-pair", "expected": "ERROR_3"},
+    {"id": "v6-later-compatible-candidate", "expected": "ORDERED_CANDIDATE_SELECTED"},
+    {"id": "v6-globally-unsupported-algorithm", "expected": "ERROR_2"},
+    {"id": "v6-signing-child-self-attestation", "expected": "PRODUCER_FALLBACK_AND_PSCP_REJECTION"},
+    {"id": "v6-signing-child-none-fallback", "expected": "PSCP_REJECTION"},
+    {"id": "v6-signing-child-trusted-packed", "expected": "FORMAT_GATE_ONLY"}
   ]
 }
